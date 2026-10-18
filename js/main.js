@@ -25,6 +25,8 @@ async function loadContent() {
 loadContent().then(C => { init(C); });
 
 function init(C) {
+  const pre = document.getElementById('preloader');
+  if (pre) setTimeout(() => pre.classList.add('done'), 400);
 const couple = C.couple;
 const WEDDING_DATE = new Date(couple.dateISO);
 
