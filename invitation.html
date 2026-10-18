@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>You're Invited — Astonie & Wanangwa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6b2737" />
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="logo" href="index.html">A & W</a>
+      <div class="nav-links"><a href="index.html">Home</a><a href="index.html#details">Details</a><a href="index.html#rsvp">RSVP</a></div>
+      <a class="nav-cta" href="index.html#rsvp">RSVP</a>
+    </div>
+  </nav>
+
+  <main class="invite-page">
+    <div class="container" style="max-width:640px">
+      <div id="envelopeStage">
+        <p class="center muted" style="margin-bottom:20px;letter-spacing:.15em;text-transform:uppercase;font-size:12px">Tap the envelope to open</p>
+        <div class="envelope-wrap" id="envWrap">
+          <div class="envelope" id="envelope">
+            <div class="flap"></div>
+            <div class="body"></div>
+            <div class="seal">A&W</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cardStage" style="display:none;margin-top:40px">
+        <div class="invite-card">
+          <div class="to" id="guestLine">Dear Honored Guest,</div>
+          <div class="line"></div>
+          <div style="font-size:13px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:6px">You are cordially invited to the wedding of</div>
+          <div class="names" id="invNames">Astonie & Wanangwa</div>
+          <div class="line"></div>
+          <div class="date" id="invDate">December 6, 2026</div>
+          <div class="venue" id="invVenue">Ceremony · 2:00 PM · Golden Peacock Hotel, Blantyre<br/>Reception · 5:00 PM · Golden Peacock Hotel, Blantyre</div>
+          <p style="font-family:var(--font-display);font-style:italic;color:var(--muted)">Together with our families, we invite you to share in our joy as we unite in marriage.</p>
+          <div class="qr-box"><img id="qrImg" src="" alt="QR"></div>
+          <div class="invite-actions">
+            <a class="btn btn-primary" href="index.html#rsvp">RSVP Now</a>
+            <button class="btn btn-ghost" id="shareBtn">Share</button>
+            <button class="btn btn-ghost" id="calBtn">Add to Calendar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/content.js"></script>
+  <script src="js/invitation.js"></script>
+</body>
+</html>
