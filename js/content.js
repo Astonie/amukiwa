@@ -92,4 +92,4 @@ function getContent() {
 function saveContent(c) { localStorage.setItem('weddingContent', JSON.stringify(c)); }
 function resetContent() { localStorage.removeItem('weddingContent'); }
 
-window.WeddingContent = { DEFAULT_CONTENT, getContent, saveContent, resetContent };
+window.WeddingContent = { DEFAULT_CONTENT, getContent, saveContent, resetContent, mergeDefaults };

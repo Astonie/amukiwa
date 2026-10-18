@@ -315,7 +315,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   gather();
   const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='wedding-content.json'; a.click();
+  const a = document.createElement('a'); a.href=url; a.download='content.json'; a.click();
   URL.revokeObjectURL(url);
 });
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('fileInput').click());

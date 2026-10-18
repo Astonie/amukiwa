@@ -1,4 +1,27 @@
-const C = window.WeddingContent.getContent();
+async function loadContent() {
+  const WC = window.WeddingContent;
+  let base = null;
+  try {
+    const r = await fetch('content.json', { cache: 'no-store' });
+    if (r.ok) base = await r.json();
+  } catch (e) {}
+  if (!base) base = JSON.parse(JSON.stringify(WC.DEFAULT_CONTENT));
+  try {
+    const raw = localStorage.getItem('weddingContent');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      base = Object.assign(JSON.parse(JSON.stringify(base)), saved);
+      if (saved.site) base.site = Object.assign({}, base.site, saved.site);
+      if (saved.couple) base.couple = Object.assign({}, base.couple, saved.couple);
+      if (saved.media) base.media = Object.assign({}, base.media, saved.media);
+    }
+  } catch (e) {}
+  return base;
+}
+
+loadContent().then(C => { init(C); });
+
+function init(C) {
 const couple = C.couple;
 const params = new URLSearchParams(location.search);
 const guest = params.get('to') || params.get('guest') || '';
@@ -8,9 +31,8 @@ if (guest) guestLine.textContent = `Dear ${decodeURIComponent(guest)},`;
 document.getElementById('invNames').textContent = `${couple.groom} & ${couple.bride}`;
 document.getElementById('invDate').textContent = couple.dateDisplay;
 document.title = `You're Invited — ${couple.groom} & ${couple.bride}`;
-// venue details from content details
 const d0 = C.details[0], d1 = C.details[1] || C.details[0];
-document.getElementById('invVenue').innerHTML = `${d0.title} · ${d0.time} · ${d0.place}, ${d0.address.split(',')[0]}<br/>${d1.title} · ${d1.time} · ${d1.place}, ${d1.address.split(',')[0]}`;
+document.getElementById('invVenue').innerHTML = `${d0.title} · ${d0.time} · ${d0.place}<br/>${d1.title} · ${d1.time} · ${d1.place}`;
 
 const envelope = document.getElementById('envelope');
 const envWrap = document.getElementById('envWrap');
@@ -72,4 +94,5 @@ function launchConfetti() {
   }
   requestAnimationFrame(frame);
 }
-window.addEventListener('resize', () => { const c=document.getElementById('confetti'); c.width=innerWidth; c.height=innerHeight; });
+window.addEventListener('resize', () => { const c=document.getElementById('confetti'); if(c){c.width=innerWidth; c.height=innerHeight;} });
+}

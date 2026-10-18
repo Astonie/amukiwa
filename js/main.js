@@ -1,4 +1,30 @@
-const C = window.WeddingContent.getContent();
+async function loadContent() {
+  const WC = window.WeddingContent;
+  let base = null;
+  try {
+    const r = await fetch('content.json', { cache: 'no-store' });
+    if (r.ok) base = await r.json();
+  } catch (e) {}
+  if (!base) base = JSON.parse(JSON.stringify(WC.DEFAULT_CONTENT));
+  // merge localStorage overrides (admin preview)
+  try {
+    const raw = localStorage.getItem('weddingContent');
+    if (raw) base = WC.mergeDefaults ? WC.mergeDefaults(Object.assign(JSON.parse(JSON.stringify(WC.DEFAULT_CONTENT)), JSON.parse(raw))) : base;
+    // simpler: if localStorage has content, prefer it for admin preview
+    if (raw) {
+      const saved = JSON.parse(raw);
+      base = Object.assign(JSON.parse(JSON.stringify(base)), saved);
+      if (saved.site) base.site = Object.assign({}, base.site, saved.site);
+      if (saved.couple) base.couple = Object.assign({}, base.couple, saved.couple);
+      if (saved.media) base.media = Object.assign({}, base.media, saved.media);
+    }
+  } catch (e) {}
+  return base;
+}
+
+loadContent().then(C => { init(C); });
+
+function init(C) {
 const couple = C.couple;
 const WEDDING_DATE = new Date(couple.dateISO);
 
@@ -13,6 +39,11 @@ document.getElementById('navLogo').textContent = couple.groom[0] + ' & ' + coupl
 document.getElementById('heroNames').innerHTML = `${couple.groom} <span class="hero-amp">&</span> ${couple.bride}`;
 document.getElementById('heroDate').textContent = couple.dateDisplay;
 document.getElementById('heroLoc').textContent = couple.location;
+document.getElementById('rsvpSub').textContent = `Kindly respond by ${couple.rsvpDeadline}`;
+document.getElementById('footerNames').textContent = `${couple.groom} & ${couple.bride}`;
+document.getElementById('footerDate').textContent = `${couple.dateDisplay} · ${couple.location}`;
+document.title = `${couple.groom} & ${couple.bride} — Wedding`;
+
 const site = C.site || {};
 if (site.eyebrow) document.getElementById('heroEyebrow').textContent = site.eyebrow;
 if (site.storyTitle) document.getElementById('storyTitle').textContent = site.storyTitle;
@@ -30,16 +61,13 @@ if (site.faqSub) document.getElementById('faqSub').textContent = site.faqSub;
 if (site.guestbookTitle) document.getElementById('guestbookTitle').textContent = site.guestbookTitle;
 if (site.guestbookSub) document.getElementById('guestbookSub').textContent = site.guestbookSub;
 if (site.footerMessage) document.getElementById('footerMsg').textContent = site.footerMessage;
+
 if (C.media?.heroImage) {
   document.querySelector('.hero').style.backgroundImage = `url(${C.media.heroImage})`;
   document.querySelector('.hero').style.backgroundSize = 'cover';
   document.querySelector('.hero').style.backgroundPosition = 'center';
 }
 if (C.media?.musicUrl) document.getElementById('bgMusic').src = C.media.musicUrl;
-document.getElementById('rsvpSub').textContent = `Kindly respond by ${couple.rsvpDeadline}`;
-document.getElementById('footerNames').textContent = `${couple.groom} & ${couple.bride}`;
-document.getElementById('footerDate').textContent = `${couple.dateDisplay} · ${couple.location}`;
-document.title = `${couple.groom} & ${couple.bride} — Wedding`;
 
 // Countdown
 function updateCountdown() {
@@ -146,10 +174,10 @@ const io = new IntersectionObserver(entries => {
 }, {threshold:.15});
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-// Add to calendar (use couple details)
+// Add to calendar
 document.getElementById('addCal').addEventListener('click', e => {
   e.preventDefault();
-  const dt = couple.dateISO.replace(/[-:]/g,'').replace('T','T').slice(0,15);
+  const dt = couple.dateISO.replace(/[-:]/g,'').slice(0,15);
   const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//AstonieWanangwa//EN\nBEGIN:VEVENT\nUID:astonie-wanangwa-wedding\nDTSTAMP:${dt}Z\nDTSTART:${dt}\nDTEND:${dt}\nSUMMARY:${couple.groom} & ${couple.bride} Wedding\nLOCATION:${couple.venue}, ${couple.location}\nDESCRIPTION:Ceremony and reception\nEND:VEVENT\nEND:VCALENDAR`;
   const blob = new Blob([ics],{type:'text/calendar'});
   const url = URL.createObjectURL(blob);
@@ -166,6 +194,9 @@ musicBtn.addEventListener('click', () => {
   else { music.play().catch(()=>{}); musicBtn.textContent='⏸'; }
   playing = !playing;
 });
+
+window.launchConfetti = launchConfetti;
+}
 
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
@@ -192,5 +223,4 @@ function launchConfetti() {
   }
   requestAnimationFrame(frame);
 }
-window.addEventListener('resize', () => { const c=document.getElementById('confetti'); c.width=innerWidth; c.height=innerHeight; });
-window.launchConfetti = launchConfetti;
+window.addEventListener('resize', () => { const c=document.getElementById('confetti'); if(c){c.width=innerWidth; c.height=innerHeight;} });
