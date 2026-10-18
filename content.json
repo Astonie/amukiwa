@@ -30,8 +30,13 @@
   },
   "media": {
     "heroImage": "",
-    "musicUrl": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-112199.mp3",
-    "coverImage": ""
+    "coverImage": "",
+    "playlist": [
+      {
+        "title": "Romantic Piano",
+        "url": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-112199.mp3"
+      }
+    ]
   },
   "invitation": {
     "eyebrow": "You are cordially invited",
@@ -40,14 +45,42 @@
     "rsvpText": "RSVP Now"
   },
   "story": [
-    { "year": "2019", "title": "First Meeting", "text": "A chance encounter that changed everything. One conversation turned into a thousand." },
-    { "year": "2021", "title": "First Trip Together", "text": "Exploring the shores of Lake Malawi, we knew this was forever." },
-    { "year": "2024", "title": "The Proposal", "text": "Under a sky full of stars, a question was asked and answered with a joyful yes." },
-    { "year": "2026", "title": "The Wedding", "text": "Surrounded by the people we love most, we begin our forever." }
+    {
+      "year": "2019",
+      "title": "First Meeting",
+      "text": "A chance encounter that changed everything. One conversation turned into a thousand."
+    },
+    {
+      "year": "2021",
+      "title": "First Trip Together",
+      "text": "Exploring the shores of Lake Malawi, we knew this was forever."
+    },
+    {
+      "year": "2024",
+      "title": "The Proposal",
+      "text": "Under a sky full of stars, a question was asked and answered with a joyful yes."
+    },
+    {
+      "year": "2026",
+      "title": "The Wedding",
+      "text": "Surrounded by the people we love most, we begin our forever."
+    }
   ],
   "details": [
-    { "title": "Ceremony", "time": "2:00 PM", "place": "Golden Peacock Hotel", "address": "Blantyre, Malawi", "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre" },
-    { "title": "Reception", "time": "5:00 PM", "place": "Golden Peacock Hotel", "address": "Blantyre, Malawi", "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre" }
+    {
+      "title": "Ceremony",
+      "time": "2:00 PM",
+      "place": "Golden Peacock Hotel",
+      "address": "Blantyre, Malawi",
+      "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
+    },
+    {
+      "title": "Reception",
+      "time": "5:00 PM",
+      "place": "Golden Peacock Hotel",
+      "address": "Blantyre, Malawi",
+      "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
+    }
   ],
   "gallery": [
     "https://picsum.photos/seed/aw1/600/600",
@@ -60,16 +93,51 @@
     "https://picsum.photos/seed/aw8/600/600"
   ],
   "party": [
-    { "initial": "J", "name": "James Banda", "role": "Best Man", "note": "Brother of the groom" },
-    { "initial": "M", "name": "Mercy Phiri", "role": "Maid of Honor", "note": "Best friend of the bride" },
-    { "initial": "D", "name": "Daniel Chirwa", "role": "Groomsman", "note": "Childhood friend" },
-    { "initial": "G", "name": "Grace Mwale", "role": "Bridesmaid", "note": "Sister of the bride" }
+    {
+      "initial": "J",
+      "name": "James Banda",
+      "role": "Best Man",
+      "note": "Brother of the groom"
+    },
+    {
+      "initial": "M",
+      "name": "Mercy Phiri",
+      "role": "Maid of Honor",
+      "note": "Best friend of the bride"
+    },
+    {
+      "initial": "D",
+      "name": "Daniel Chirwa",
+      "role": "Groomsman",
+      "note": "Childhood friend"
+    },
+    {
+      "initial": "G",
+      "name": "Grace Mwale",
+      "role": "Bridesmaid",
+      "note": "Sister of the bride"
+    }
   ],
   "faq": [
-    { "q": "What is the dress code?", "a": "Semi-formal. We suggest earthy tones, sage, champagne and rose. Please avoid white." },
-    { "q": "Is there parking?", "a": "Yes, free parking is available at the venue." },
-    { "q": "Are children welcome?", "a": "We love your little ones, but this will be an adults-only celebration." },
-    { "q": "Can I take photos?", "a": "Please share on socials with #AstonieAndWanangwa. Our photographer will capture the ceremony." },
-    { "q": "What about gifts?", "a": "Your presence is the greatest gift. If you wish, a honeymoon fund is available." }
+    {
+      "q": "What is the dress code?",
+      "a": "Semi-formal. We suggest earthy tones, sage, champagne and rose. Please avoid white."
+    },
+    {
+      "q": "Is there parking?",
+      "a": "Yes, free parking is available at the venue."
+    },
+    {
+      "q": "Are children welcome?",
+      "a": "We love your little ones, but this will be an adults-only celebration."
+    },
+    {
+      "q": "Can I take photos?",
+      "a": "Please share on socials with #AstonieAndWanangwa. Our photographer will capture the ceremony."
+    },
+    {
+      "q": "What about gifts?",
+      "a": "Your presence is the greatest gift. If you wish, a honeymoon fund is available."
+    }
   ]
 }

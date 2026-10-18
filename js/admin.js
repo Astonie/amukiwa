@@ -168,7 +168,12 @@ function renderMedia() {
     <div class="field"><label>Upload images</label><input type="file" id="m_upload" accept="image/*" multiple></div>
     <p class="muted" style="font-size:12px">Uploaded images are stored in this browser. For production, host externally and paste URLs, or Publish to commit them.</p>
     <h3 style="margin:18px 0 10px;font-size:20px;color:var(--burgundy)">Media Library</h3>
-    <div class="media-grid" id="mediaGrid"></div>`;
+    <div class="media-grid" id="mediaGrid"></div>
+
+    <h3 style="margin:24px 0 10px;font-size:20px;color:var(--burgundy)">Music Playlist</h3>
+    <div class="field"><label>Upload audio (mp3)</label><input type="file" id="m_audio" accept="audio/*" multiple></div>
+    <div class="field"><label>Add track URL</label><div style="display:flex;gap:8px"><input id="m_trackUrl" placeholder="https://...mp3"><input id="m_trackTitle" placeholder="Track title" style="max-width:200px"><button class="btn-sm" id="addTrackBtn" type="button">Add</button></div></div>
+    <div class="list-editor" id="playlistList"></div>`;
   const grid = el.querySelector('#mediaGrid');
   state.gallery.forEach((u, idx) => {
     const card = document.createElement('div');
@@ -195,6 +200,44 @@ function renderMedia() {
       reader.readAsDataURL(file);
     });
   });
+
+  // Playlist
+  const pl = el.querySelector('#playlistList');
+  const playlist = state.media.playlist || [];
+  playlist.forEach((t, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<button class="remove" data-idx="${idx}">&times;</button>
+      <div class="row"><div class="field"><label>Title</label><input class="pl-title" value="${escapeAttr(t.title)}"></div><div class="field"><label>URL</label><input class="pl-url" value="${escapeAttr(t.url)}"></div></div>`;
+    pl.appendChild(div);
+  });
+  el.querySelector('#addTrackBtn').addEventListener('click', () => {
+    const url = document.getElementById('m_trackUrl').value.trim();
+    const title = document.getElementById('m_trackTitle').value.trim() || 'Track';
+    if (!url) return;
+    state.media.playlist = state.media.playlist || [];
+    state.media.playlist.push({ title, url });
+    document.getElementById('m_trackUrl').value = '';
+    document.getElementById('m_trackTitle').value = '';
+    renderMedia();
+    toast('Track added');
+  });
+  el.querySelector('#m_audio').addEventListener('change', e => {
+    [...e.target.files].forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        state.media.playlist = state.media.playlist || [];
+        state.media.playlist.push({ title: file.name.replace(/\.[^.]+$/, ''), url: ev.target.result });
+        renderMedia();
+        toast('Audio added');
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+  pl.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => {
+    state.media.playlist.splice(+e.target.dataset.idx, 1);
+    renderMedia();
+    toast('Removed');
+  }));
 }
 
 // Story
@@ -422,7 +465,11 @@ function gather() {
   state.media = {
     heroImage: document.getElementById('m_hero').value,
     coverImage: document.getElementById('m_cover').value,
-    musicUrl: document.getElementById('m_music').value,
+    musicUrl: document.getElementById('m_music') ? document.getElementById('m_music').value : '',
+    playlist: [...document.querySelectorAll('#panel-media .list-item')].map(it => ({
+      title: it.querySelector('.pl-title').value,
+      url: it.querySelector('.pl-url').value,
+    })).filter(t => t.url),
   };
   // story
   const storyItems = document.querySelectorAll('#panel-story .list-item');

@@ -30,8 +30,10 @@ const DEFAULT_CONTENT = {
   },
   media: {
     heroImage: "",
-    musicUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-112199.mp3",
-    coverImage: ""
+    coverImage: "",
+    playlist: [
+      { title: "Romantic Piano", url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-112199.mp3" }
+    ]
   },
   invitation: {
     eyebrow: "You are cordially invited",

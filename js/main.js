@@ -187,15 +187,47 @@ document.getElementById('addCal').addEventListener('click', e => {
   URL.revokeObjectURL(url);
 });
 
-// Music
+// Music playlist
 const music = document.getElementById('bgMusic');
 const musicBtn = document.getElementById('musicBtn');
+const musicPlayer = document.getElementById('musicPlayer');
+const musicPanel = document.getElementById('musicPanel');
+const playBtn = document.getElementById('playBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const volume = document.getElementById('volume');
+const trackTitle = document.getElementById('trackTitle');
+const playlistEl = document.getElementById('playlist');
+
+const playlist = (C.media && Array.isArray(C.media.playlist) && C.media.playlist.length) ? C.media.playlist : (C.media?.musicUrl ? [{ title: 'Track 1', url: C.media.musicUrl }] : []);
+let current = 0;
 let playing = false;
-musicBtn.addEventListener('click', () => {
-  if(playing){ music.pause(); musicBtn.textContent='♪'; }
-  else { music.play().catch(()=>{}); musicBtn.textContent='⏸'; }
-  playing = !playing;
-});
+
+function loadTrack(i) {
+  if (!playlist.length) { trackTitle.textContent = 'No tracks'; return; }
+  current = (i + playlist.length) % playlist.length;
+  music.src = playlist[current].url;
+  trackTitle.textContent = playlist[current].title || `Track ${current + 1}`;
+  renderPlaylist();
+}
+function renderPlaylist() {
+  playlistEl.innerHTML = playlist.map((t, i) => `<div class="track ${i === current ? 'active' : ''}" data-idx="${i}"><span>${escapeHtml(t.title || 'Track ' + (i + 1))}</span></div>`).join('');
+  playlistEl.querySelectorAll('.track').forEach(el => el.addEventListener('click', () => { loadTrack(+el.dataset.idx); music.play().then(() => { playing = true; playBtn.textContent = '⏸'; }).catch(() => {}); }));
+}
+function togglePlay() {
+  if (!playlist.length) return;
+  if (playing) { music.pause(); playing = false; playBtn.textContent = '▶'; musicBtn.textContent = '♪'; }
+  else { music.play().then(() => { playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫'; }).catch(() => {}); }
+}
+musicBtn.addEventListener('click', () => musicPlayer.classList.toggle('open'));
+playBtn.addEventListener('click', togglePlay);
+prevBtn.addEventListener('click', () => { loadTrack(current - 1); if (playing) music.play().catch(() => {}); });
+nextBtn.addEventListener('click', () => { loadTrack(current + 1); if (playing) music.play().catch(() => {}); });
+volume.addEventListener('input', () => { music.volume = +volume.value; });
+music.volume = +volume.value;
+music.addEventListener('ended', () => { loadTrack(current + 1); music.play().then(() => { playing = true; playBtn.textContent = '⏸'; }).catch(() => {}); });
+loadTrack(0);
+renderPlaylist();
 
 window.launchConfetti = launchConfetti;
 }

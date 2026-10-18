@@ -177,8 +177,20 @@
     </div>
   </footer>
 
-  <button class="music-btn" id="musicBtn" aria-label="music">♪</button>
-  <audio id="bgMusic" loop src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-112199.mp3"></audio>
+  <div class="music-player" id="musicPlayer">
+    <button class="music-btn" id="musicBtn" aria-label="music">♪</button>
+    <div class="music-panel" id="musicPanel">
+      <div class="track-title" id="trackTitle">No track</div>
+      <div class="music-controls">
+        <button id="prevBtn">⏮</button>
+        <button id="playBtn">▶</button>
+        <button id="nextBtn">⏭</button>
+      </div>
+      <input type="range" id="volume" min="0" max="1" step="0.05" value="0.6" style="width:100%">
+      <div class="playlist" id="playlist"></div>
+    </div>
+  </div>
+  <audio id="bgMusic"></audio>
 
   <a class="fab-rsvp" href="#rsvp">RSVP</a>
   <script src="js/content.js"></script>
