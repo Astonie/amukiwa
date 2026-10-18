@@ -371,7 +371,7 @@ function renderPublish() {
   const settings = JSON.parse(localStorage.getItem('ghSettings') || '{}');
   document.getElementById('panel-publish').innerHTML = `
     <h2>Publish to GitHub</h2>
-    <p class="muted" style="margin-bottom:14px">Publish your content to GitHub so all visitors see it. Requires a GitHub Personal Access Token with repo write access.</p>
+    <p class="muted" style="margin-bottom:14px">Publish your content to GitHub so all visitors see it. Requires a GitHub Personal Access Token with repo write access. Keep uploaded media small (or host externally) to avoid size limits.</p>
     <div class="field"><label>GitHub Token (PAT)</label><input id="gh_token" type="password" value="${escapeAttr(settings.token || '')}" placeholder="ghp_..."></div>
     <div class="row">
       <div class="field"><label>Repository</label><input id="gh_repo" value="${escapeAttr(settings.repo || 'Astonie/amukiwa')}"></div>
@@ -515,9 +515,9 @@ function gather() {
 // Save
 document.getElementById('saveBtn').addEventListener('click', () => {
   gather();
-  WC.saveContent(state);
-  toast('Saved');
-  renderDashboard();
+  const ok = WC.saveContent(state);
+  if (ok) { toast('Saved'); renderDashboard(); }
+  else { alert('Save failed: storage quota exceeded. Remove large uploaded images/audio or publish to GitHub.'); }
 });
 
 // Reset

@@ -98,7 +98,15 @@ function getContent() {
   } catch (e) {}
   return JSON.parse(JSON.stringify(DEFAULT_CONTENT));
 }
-function saveContent(c) { localStorage.setItem('weddingContent', JSON.stringify(c)); }
+function saveContent(c) {
+  try {
+    localStorage.setItem('weddingContent', JSON.stringify(c));
+    return true;
+  } catch (e) {
+    console.error('Save failed', e);
+    return false;
+  }
+}
 function resetContent() { localStorage.removeItem('weddingContent'); }
 
 window.WeddingContent = { DEFAULT_CONTENT, getContent, saveContent, resetContent, mergeDefaults };
