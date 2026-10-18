@@ -2,11 +2,11 @@ const { getContent, saveContent, resetContent, DEFAULT_CONTENT } = window.Weddin
 let state = getContent();
 
 const tabs = [
+  { id: 'site', label: 'Site Text' },
   { id: 'couple', label: 'Couple' },
-  { id: 'media', label: 'Media' },
+  { id: 'media', label: 'Media & Gallery' },
   { id: 'story', label: 'Story' },
   { id: 'details', label: 'Details' },
-  { id: 'gallery', label: 'Gallery' },
   { id: 'party', label: 'Party' },
   { id: 'faq', label: 'FAQ' },
   { id: 'rsvps', label: 'RSVPs' },
@@ -33,6 +33,24 @@ function field(label, name, value, type='text') {
 function escapeAttr(s){return String(s??'').replace(/"/g,'&quot;');}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+// Site text panel
+function renderSite() {
+  const s = state.site || {};
+  const fields = [
+    ['eyebrow','Hero eyebrow'],['storyTitle','Story title'],['storySub','Story subtitle'],
+    ['detailsTitle','Details title'],['detailsSub','Details subtitle'],
+    ['galleryTitle','Gallery title'],['gallerySub','Gallery subtitle'],
+    ['partyTitle','Party title'],['partySub','Party subtitle'],
+    ['rsvpTitle','RSVP title'],['rsvpSub','RSVP subtitle'],
+    ['faqTitle','FAQ title'],['faqSub','FAQ subtitle'],
+    ['guestbookTitle','Guestbook title'],['guestbookSub','Guestbook subtitle'],
+    ['footerMessage','Footer message'],
+  ];
+  document.getElementById('panel-site').innerHTML = fields.map(([k,l]) =>
+    `<div class="field"><label>${l}</label><input id="site_${k}" value="${escapeAttr(s[k]||'')}"></div>`).join('');
+}
+renderSite();
+
 // Couple panel
 function renderCouple() {
   const c = state.couple;
@@ -57,16 +75,40 @@ renderCouple();
 // Media panel
 function renderMedia() {
   const m = state.media || {};
-  document.getElementById('panel-media').innerHTML = `
-    <div class="field"><label>Hero background image URL</label><input id="m_hero" value="${escapeAttr(m.heroImage||'')}"></div>
-    <div class="field"><label>Cover image URL</label><input id="m_cover" value="${escapeAttr(m.coverImage||'')}"></div>
-    <div class="field"><label>Background music URL</label><input id="m_music" value="${escapeAttr(m.musicUrl||'')}"></div>
-    <div class="field"><label>Upload image to gallery (local)</label><input type="file" id="m_upload" accept="image/*" multiple></div>
-    <p class="muted" style="font-size:12px">Uploaded images are stored as data URLs in this browser (size limits apply). For production, host media externally and paste URLs.</p>`;
-  document.getElementById('m_upload').addEventListener('change', e => {
+  const el = document.getElementById('panel-media');
+  el.innerHTML = `
+    <div class="row">
+      <div class="field"><label>Hero background image URL</label><input id="m_hero" value="${escapeAttr(m.heroImage||'')}" placeholder="https://..."></div>
+      <div class="field"><label>Cover image URL</label><input id="m_cover" value="${escapeAttr(m.coverImage||'')}" placeholder="https://..."></div>
+    </div>
+    <div class="field"><label>Background music URL</label><input id="m_music" value="${escapeAttr(m.musicUrl||'')}" placeholder="https://...mp3"></div>
+    <div class="field"><label>Upload images</label><input type="file" id="m_upload" accept="image/*" multiple></div>
+    <p class="muted" style="font-size:12px">Uploaded images are stored in this browser (size limits apply). For production, host media externally and paste URLs.</p>
+    <h3 style="margin:18px 0 10px;font-size:20px;color:var(--burgundy)">Media Library</h3>
+    <div class="media-grid" id="mediaGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px"></div>`;
+  const grid = el.querySelector('#mediaGrid');
+  state.gallery.forEach((u, idx) => {
+    const card = document.createElement('div');
+    card.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--champagne);background:#fff';
+    card.innerHTML = `<img src="${escapeAttr(u)}" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" onerror="this.style.opacity=.3">
+      <div style="padding:6px;display:flex;gap:4px;justify-content:space-between">
+        <button class="btn-sm btn-outline" style="padding:4px 8px;font-size:10px" data-act="hero" data-idx="${idx}">Hero</button>
+        <button class="btn-sm btn-outline" style="padding:4px 8px;font-size:10px" data-act="cover" data-idx="${idx}">Cover</button>
+        <button class="btn-sm btn-outline" style="padding:4px 8px;font-size:10px" data-act="del" data-idx="${idx}">✕</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll('button').forEach(b => b.addEventListener('click', e => {
+    const idx = +e.target.dataset.idx;
+    const act = e.target.dataset.act;
+    if (act === 'del') { state.gallery.splice(idx,1); renderMedia(); toast('Removed'); }
+    else if (act === 'hero') { document.getElementById('m_hero').value = state.gallery[idx]; toast('Set as hero'); }
+    else if (act === 'cover') { document.getElementById('m_cover').value = state.gallery[idx]; toast('Set as cover'); }
+  }));
+  el.querySelector('#m_upload').addEventListener('change', e => {
     [...e.target.files].forEach(file => {
       const reader = new FileReader();
-      reader.onload = ev => { state.gallery.unshift(ev.target.result); renderGallery(); toast('Image added'); };
+      reader.onload = ev => { state.gallery.unshift(ev.target.result); renderMedia(); toast('Image added'); };
       reader.readAsDataURL(file);
     });
   });
@@ -117,23 +159,6 @@ function renderDetails() {
   }));
 }
 renderDetails();
-
-// Gallery panel
-function renderGallery() {
-  const el = document.getElementById('panel-gallery');
-  el.innerHTML = `<div class="list-editor" id="galleryList"></div><button class="btn-sm" id="addImg">+ Add image URL</button>
-    <div class="field" style="margin-top:12px"><label>Or paste comma-separated URLs</label><textarea id="galleryBulk" rows="3">${escapeHtml(state.gallery.join(', '))}</textarea></div>`;
-  const list = el.querySelector('#galleryList');
-  state.gallery.forEach((u, idx) => {
-    const div = document.createElement('div'); div.className='list-item';
-    div.style.display='flex'; div.style.gap='8px'; div.style.alignItems='center';
-    div.innerHTML = `<img src="${escapeAttr(u)}" style="width:60px;height:60px;object-fit:cover;border-radius:8px" onerror="this.style.display='none'"><input class="g-url" value="${escapeAttr(u)}" style="flex:1;padding:10px;border:1px solid var(--champagne);border-radius:8px"><button class="remove" data-idx="${idx}">&times;</button>`;
-    list.appendChild(div);
-  });
-  el.querySelector('#addImg').addEventListener('click', () => { state.gallery.push('https://picsum.photos/seed/new/600/600'); renderGallery(); });
-  list.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.gallery.splice(+e.target.dataset.idx,1); renderGallery(); }));
-}
-renderGallery();
 
 // Party panel
 function renderParty() {
@@ -216,6 +241,11 @@ renderGuestbook();
 
 // Save logic: gather from DOM into state
 function gather() {
+  // site
+  state.site = state.site || {};
+  ['eyebrow','storyTitle','storySub','detailsTitle','detailsSub','galleryTitle','gallerySub','partyTitle','partySub','rsvpTitle','rsvpSub','faqTitle','faqSub','guestbookTitle','guestbookSub','footerMessage'].forEach(k=>{
+    const el=document.getElementById('site_'+k); if(el) state.site[k]=el.value;
+  });
   // couple
   state.couple = {
     groom: document.getElementById('c_groom').value,
@@ -248,9 +278,7 @@ function gather() {
     address: it.querySelector('.d-address').value,
     mapUrl: it.querySelector('.d-map').value,
   }));
-  // gallery: from bulk textarea
-  const bulk = document.getElementById('galleryBulk').value;
-  state.gallery = bulk.split(',').map(s=>s.trim()).filter(Boolean);
+  // gallery already managed in media library (state.gallery)
   // party
   const partyItems = document.querySelectorAll('#panel-party .list-item');
   state.party = [...partyItems].map(it => ({
@@ -278,7 +306,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   if (confirm('Reset all content to defaults?')) {
     resetContent();
     state = getContent();
-    renderCouple(); renderMedia(); renderStory(); renderDetails(); renderGallery(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook();
+    renderSite(); renderCouple(); renderMedia(); renderStory(); renderDetails(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook();
     toast('Reset to defaults');
   }
 });
@@ -298,7 +326,7 @@ document.getElementById('fileInput').addEventListener('change', e => {
     try {
       state = JSON.parse(ev.target.result);
       saveContent(state);
-      renderCouple(); renderMedia(); renderStory(); renderDetails(); renderGallery(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook();
+      renderSite(); renderCouple(); renderMedia(); renderStory(); renderDetails(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook();
       toast('Imported');
     } catch(err){ alert('Invalid JSON'); }
   };

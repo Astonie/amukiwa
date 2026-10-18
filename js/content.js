@@ -1,4 +1,22 @@
 const DEFAULT_CONTENT = {
+  site: {
+    eyebrow: "We're getting married",
+    storyTitle: "Our Story",
+    storySub: "A journey of love, laughter and a lifetime together",
+    detailsTitle: "Event Details",
+    detailsSub: "When & where we celebrate",
+    galleryTitle: "Gallery",
+    gallerySub: "Moments we cherish",
+    partyTitle: "Wedding Party",
+    partySub: "The ones standing beside us",
+    rsvpTitle: "RSVP",
+    rsvpSub: "Kindly respond by November 30, 2026",
+    faqTitle: "FAQ",
+    faqSub: "Good to know",
+    guestbookTitle: "Guest Book",
+    guestbookSub: "Leave a note for the couple",
+    footerMessage: "With love, we can't wait to celebrate with you."
+  },
   couple: {
     groom: "Astonie",
     bride: "Wanangwa",
@@ -54,6 +72,7 @@ function mergeDefaults(saved) {
   const base = JSON.parse(JSON.stringify(DEFAULT_CONTENT));
   if (!saved) return base;
   return {
+    site: Object.assign(base.site, saved.site || {}),
     couple: Object.assign(base.couple, saved.couple || {}),
     media: Object.assign(base.media, saved.media || {}),
     story: saved.story || base.story,

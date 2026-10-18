@@ -13,6 +13,23 @@ document.getElementById('navLogo').textContent = couple.groom[0] + ' & ' + coupl
 document.getElementById('heroNames').innerHTML = `${couple.groom} <span class="hero-amp">&</span> ${couple.bride}`;
 document.getElementById('heroDate').textContent = couple.dateDisplay;
 document.getElementById('heroLoc').textContent = couple.location;
+const site = C.site || {};
+if (site.eyebrow) document.getElementById('heroEyebrow').textContent = site.eyebrow;
+if (site.storyTitle) document.getElementById('storyTitle').textContent = site.storyTitle;
+if (site.storySub) document.getElementById('storySub').textContent = site.storySub;
+if (site.detailsTitle) document.getElementById('detailsTitle').textContent = site.detailsTitle;
+if (site.detailsSub) document.getElementById('detailsSub').textContent = site.detailsSub;
+if (site.galleryTitle) document.getElementById('galleryTitle').textContent = site.galleryTitle;
+if (site.gallerySub) document.getElementById('gallerySub').textContent = site.gallerySub;
+if (site.partyTitle) document.getElementById('partyTitle').textContent = site.partyTitle;
+if (site.partySub) document.getElementById('partySub').textContent = site.partySub;
+if (site.rsvpTitle) document.getElementById('rsvpTitle').textContent = site.rsvpTitle;
+if (site.rsvpSub) document.getElementById('rsvpSub').textContent = site.rsvpSub;
+if (site.faqTitle) document.getElementById('faqTitle').textContent = site.faqTitle;
+if (site.faqSub) document.getElementById('faqSub').textContent = site.faqSub;
+if (site.guestbookTitle) document.getElementById('guestbookTitle').textContent = site.guestbookTitle;
+if (site.guestbookSub) document.getElementById('guestbookSub').textContent = site.guestbookSub;
+if (site.footerMessage) document.getElementById('footerMsg').textContent = site.footerMessage;
 if (C.media?.heroImage) {
   document.querySelector('.hero').style.backgroundImage = `url(${C.media.heroImage})`;
   document.querySelector('.hero').style.backgroundSize = 'cover';

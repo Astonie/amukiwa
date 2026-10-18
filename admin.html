@@ -11,7 +11,7 @@
   <style>
     .admin-wrap{max-width:1000px;margin:0 auto;padding:90px 20px 40px}
     .admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
-    .admin-tab{padding:10px 16px;border-radius:999px;background:var(--card);border:1px solid var(--champagne);font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+    .admin-tab{padding:10px 16px;border-radius:10px;background:var(--card);border:1px solid var(--champagne);font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;width:100%;text-align:left}
     .admin-tab.active{background:var(--burgundy);color:#fff;border-color:var(--burgundy)}
     .admin-panel{display:none;background:var(--card);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)}
     .admin-panel.active{display:block}
@@ -42,8 +42,10 @@
     <h2 class="section-title" style="font-size:36px">Content Manager</h2>
     <p class="section-sub">Edit wedding details. Changes save to this browser.</p>
 
-    <div class="admin-tabs" id="tabs"></div>
-    <div id="panels"></div>
+    <div class="admin-layout" style="display:flex;gap:24px;align-items:flex-start">
+      <div class="admin-tabs" id="tabs" style="flex-direction:column;width:200px;position:sticky;top:80px"></div>
+      <div id="panels" style="flex:1;min-width:0"></div>
+    </div>
 
     <div class="save-bar">
       <a class="btn-sm btn-outline" href="index.html" target="_blank">Preview Site</a>
