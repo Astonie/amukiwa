@@ -393,12 +393,36 @@ function renderPublish() {
   document.getElementById('testGh').addEventListener('click', async () => {
     const status = document.getElementById('publishStatus');
     const s = { token: document.getElementById('gh_token').value.trim(), repo: document.getElementById('gh_repo').value.trim(), branch: document.getElementById('gh_branch').value.trim() };
+    localStorage.setItem('ghSettings', JSON.stringify(s));
     status.textContent = 'Testing...';
     try {
       const res = await fetch(`https://api.github.com/repos/${s.repo}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
       if (!res.ok) throw new Error((await res.json()).message || res.statusText);
       const data = await res.json();
-      status.textContent = `Connected: ${data.full_name} (${data.permissions?.push ? 'push OK' : 'no push permission'})`;
+      const scopes = res.headers.get('x-oauth-scopes') || '';
+      let writeTest = ' not tested';
+      try {
+        const put = await fetch(`https://api.github.com/repos/${s.repo}/contents/.admin-write-test.json`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'write test', content: btoa('test'), branch: s.branch || 'main' })
+        });
+        if (put.ok) {
+          const d = await put.json();
+          writeTest = 'OK (test file created, cleaning up...)';
+          await fetch(`https://api.github.com/repos/${s.repo}/contents/.admin-write-test.json`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'cleanup write test', sha: d.content.sha, branch: s.branch || 'main' })
+          });
+          writeTest = 'OK';
+        } else {
+          writeTest = `FAILED (${put.status}) — token lacks Contents write access`;
+        }
+      } catch (e) { writeTest = 'error'; }
+      status.innerHTML = `Connected: ${escapeHtml(data.full_name)} (push: ${data.permissions?.push ? 'yes' : 'no'})<br>` +
+        `Scopes: ${escapeHtml(scopes || 'none returned (fine-grained token)')}<br>` +
+        `Content write test: ${escapeHtml(writeTest)}`;
     } catch (e) { status.textContent = 'Error: ' + e.message; }
   });
   document.getElementById('publishBtn').addEventListener('click', async () => {
@@ -558,7 +582,7 @@ async function publishToGitHub() {
       const err = await putRes.json().catch(() => ({}));
       const msg = err.message || putRes.statusText;
       if (putRes.status === 403 && /not accessible/i.test(msg)) {
-        lastPublishError = 'Token can READ but cannot WRITE.\n\nFix the token on GitHub:\nSettings → Developer settings → Personal access tokens → your token → Scopes.\n\n• Classic token: enable "repo" (full control of private repositories).\n• Fine-grained token: Repository access → Only select repositories → add Astonie/amukiwa, and Permissions → Contents → Read and write.\n\nThen paste the new token here and publish again.';
+        lastPublishError = 'Token can READ but cannot WRITE.\n\nEasiest fix — create a new CLASSIC token:\nGitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).\nScope: tick "repo" only. Generate, copy it (starts ghp_), paste here.\n\nIf using a FINE-GRAINED token instead:\n• Repository access must be "Only select repositories" → add Astonie/amukiwa.\n  (NOT "Public repositories (read-only)" — that can never write.)\n• Permissions → Contents → Read and write.\n• Press "Update token permissions" to save.\n• If your org requires SSO, click "Authorize SSO" next to the token.\n\nThen paste the new token and publish again.';
       } else {
         lastPublishError = `GitHub error (${putRes.status}): ${msg}`;
       }
