@@ -219,7 +219,9 @@ function togglePlay() {
   if (playing) { music.pause(); playing = false; playBtn.textContent = '▶'; musicBtn.textContent = '♪'; }
   else { music.play().then(() => { playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫'; }).catch(() => {}); }
 }
-musicBtn.addEventListener('click', () => musicPlayer.classList.toggle('open'));
+musicBtn.addEventListener('click', togglePlay);
+const playlistBtn = document.getElementById('playlistBtn');
+if (playlistBtn) playlistBtn.addEventListener('click', () => musicPlayer.classList.toggle('open'));
 playBtn.addEventListener('click', togglePlay);
 prevBtn.addEventListener('click', () => { loadTrack(current - 1); if (playing) music.play().catch(() => {}); });
 nextBtn.addEventListener('click', () => { loadTrack(current + 1); if (playing) music.play().catch(() => {}); });
