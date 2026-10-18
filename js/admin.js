@@ -22,6 +22,7 @@ const loginScreen = document.getElementById('loginScreen');
 const adminApp = document.getElementById('adminApp');
 function checkAuth() {
   if (sessionStorage.getItem('adminAuth') === '1') {
+    sessionStorage.setItem('adminPreview', '1');
     loginScreen.style.display = 'none';
     adminApp.style.display = 'block';
     initAdmin();
@@ -32,6 +33,7 @@ document.getElementById('loginBtn').addEventListener('click', () => {
   const stored = localStorage.getItem('adminPassword') || 'admin';
   if (pass === stored) {
     sessionStorage.setItem('adminAuth', '1');
+    sessionStorage.setItem('adminPreview', '1');
     loginScreen.style.display = 'none';
     adminApp.style.display = 'block';
     initAdmin();

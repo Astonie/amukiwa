@@ -6,16 +6,20 @@ async function loadContent() {
     if (r.ok) base = await r.json();
   } catch (e) {}
   if (!base) base = JSON.parse(JSON.stringify(WC.DEFAULT_CONTENT));
-  try {
-    const raw = localStorage.getItem('weddingContent');
-    if (raw) {
-      const saved = JSON.parse(raw);
-      base = Object.assign(JSON.parse(JSON.stringify(base)), saved);
-      if (saved.site) base.site = Object.assign({}, base.site, saved.site);
-      if (saved.couple) base.couple = Object.assign({}, base.couple, saved.couple);
-      if (saved.media) base.media = Object.assign({}, base.media, saved.media);
-    }
-  } catch (e) {}
+  const preview = new URLSearchParams(location.search).get('preview') === '1' || sessionStorage.getItem('adminPreview') === '1';
+  if (preview) {
+    try {
+      const raw = localStorage.getItem('weddingContent');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        base = Object.assign(JSON.parse(JSON.stringify(base)), saved);
+        if (saved.site) base.site = Object.assign({}, base.site, saved.site);
+        if (saved.couple) base.couple = Object.assign({}, base.couple, saved.couple);
+        if (saved.media) base.media = Object.assign({}, base.media, saved.media);
+        if (saved.invitation) base.invitation = Object.assign({}, base.invitation, saved.invitation);
+      }
+    } catch (e) {}
+  }
   return base;
 }
 
