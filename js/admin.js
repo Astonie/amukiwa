@@ -384,7 +384,7 @@ function renderPublish() {
       <button class="btn-sm" id="publishBtn">Publish content.json</button>
     </div>
     <div id="publishStatus" style="margin-top:12px;font-size:13px"></div>
-    <p class="muted" style="font-size:12px;margin-top:14px">Create a token: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained or classic with repo write. Stored only in this browser.</p>`;
+    <p class="muted" style="font-size:12px;margin-top:14px">Create a token: GitHub → Settings → Developer settings → Personal access tokens → Classic with <b>repo</b> scope (write access), or Fine-grained with Repository access = <b>Astonie/amukiwa</b> and Contents = <b>Read and write</b>. Stored only in this browser.</p>`;
   document.getElementById('saveGh').addEventListener('click', () => {
     const s = { token: document.getElementById('gh_token').value.trim(), repo: document.getElementById('gh_repo').value.trim(), branch: document.getElementById('gh_branch').value.trim(), path: document.getElementById('gh_path').value.trim() };
     localStorage.setItem('ghSettings', JSON.stringify(s));
@@ -408,7 +408,10 @@ function renderPublish() {
     localStorage.setItem('ghSettings', JSON.stringify(s));
     const ok = await publishToGitHub();
     if (ok) { status.textContent = 'Published! Site will redeploy shortly.'; toast('Published'); }
-    else { status.textContent = 'Publish failed — check token/repo/branch in console (F12).'; }
+    else {
+      status.innerHTML = 'Publish failed:<br><pre style="white-space:pre-wrap;font-size:12px;margin-top:8px">' +
+        escapeHtml(lastPublishError || 'Unknown error — check browser console (F12).') + '</pre>';
+    }
   });
 }
 
@@ -526,7 +529,10 @@ function gather() {
 }
 
 // Save
+let lastPublishError = '';
+
 async function publishToGitHub() {
+  lastPublishError = '';
   const s = JSON.parse(localStorage.getItem('ghSettings') || '{}');
   if (!s.token || !s.repo) return false;
   gather();
@@ -536,14 +542,32 @@ async function publishToGitHub() {
   try {
     let sha = null;
     const getRes = await fetch(`${api}?ref=${s.branch || 'main'}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
-    if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
+    if (!getRes.ok) {
+      if (getRes.status !== 404) {
+        const e = await getRes.json().catch(() => ({}));
+        throw new Error(e.message || getRes.statusText);
+      }
+    } else {
+      const data = await getRes.json();
+      sha = data.sha;
+    }
     const body = { message: 'Update content.json via admin', content, branch: s.branch || 'main' };
     if (sha) body.sha = sha;
     const putRes = await fetch(api, { method: 'PUT', headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!putRes.ok) { const err = await putRes.json(); throw new Error(err.message || putRes.statusText); }
+    if (!putRes.ok) {
+      const err = await putRes.json().catch(() => ({}));
+      const msg = err.message || putRes.statusText;
+      if (putRes.status === 403 && /not accessible/i.test(msg)) {
+        lastPublishError = 'Token can READ but cannot WRITE.\n\nFix the token on GitHub:\nSettings → Developer settings → Personal access tokens → your token → Scopes.\n\n• Classic token: enable "repo" (full control of private repositories).\n• Fine-grained token: Repository access → Only select repositories → add Astonie/amukiwa, and Permissions → Contents → Read and write.\n\nThen paste the new token here and publish again.';
+      } else {
+        lastPublishError = `GitHub error (${putRes.status}): ${msg}`;
+      }
+      throw new Error(lastPublishError);
+    }
     return true;
   } catch (e) {
     console.error(e);
+    if (!lastPublishError) lastPublishError = e.message;
     return false;
   }
 }
@@ -559,7 +583,7 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
   if (s.token) {
     const pub = await publishToGitHub();
     if (pub) toast('Published to GitHub');
-    else alert('Saved locally, but publishing failed. Open the Publish tab → Test Connection.');
+    else alert('Saved locally, but publishing failed:\n\n' + lastPublishError);
   } else {
     alert('Saved to this browser only — visitors still see the old site.\n\nTo make changes live: open the Publish tab, paste a GitHub token, then click "Publish content.json".');
   }
