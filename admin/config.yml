@@ -2,12 +2,16 @@ backend:
   name: git-gateway
   branch: main
 
+site_url: "https://astonie.github.io/amukiwa/"
+display_url: "https://astonie.github.io/amukiwa/"
+
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
 collections:
   - name: "content"
     label: "Wedding Content"
+    description: "Everything shown on the wedding site and invitation."
     files:
       - label: "Site Content"
         name: "content"
@@ -32,15 +36,16 @@ collections:
               - { label: "FAQ Subtitle", name: "faqSub", widget: "string" }
               - { label: "Guestbook Title", name: "guestbookTitle", widget: "string" }
               - { label: "Guestbook Subtitle", name: "guestbookSub", widget: "string" }
-              - { label: "Footer Message", name: "footerMessage", widget: "string" }
+              - { label: "Footer Message", name: "footerMessage", widget: "string", required: false }
           - label: "Couple"
             name: "couple"
             widget: "object"
             fields:
               - { label: "Groom", name: "groom", widget: "string" }
               - { label: "Bride", name: "bride", widget: "string" }
-              - { label: "Date (ISO)", name: "dateISO", widget: "string" }
+              - { label: "Date (ISO)", name: "dateISO", widget: "string", hint: "Format: 2026-12-06T14:00:00" }
               - { label: "Date Display", name: "dateDisplay", widget: "string" }
+              - { label: "Day of Week", name: "dayOfWeek", widget: "string", required: false }
               - { label: "Location", name: "location", widget: "string" }
               - { label: "Venue", name: "venue", widget: "string" }
               - { label: "Hashtag", name: "hashtag", widget: "string" }
@@ -49,40 +54,60 @@ collections:
             name: "media"
             widget: "object"
             fields:
-              - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
+              - { label: "Hero Image", name: "heroImage", widget: "image", required: false, hint: "Leave empty to use the default hero" }
               - { label: "Cover Image", name: "coverImage", widget: "image", required: false }
-              - { label: "Music URL", name: "musicUrl", widget: "string" }
-          - label: "Story"
+              - { label: "Background Music URL", name: "musicUrl", widget: "string", required: false }
+              - label: "Playlist"
+                name: "playlist"
+                widget: "list"
+                summary: "{{fields.title}}"
+                fields:
+                  - { label: "Track Title", name: "title", widget: "string" }
+                  - { label: "Audio URL", name: "url", widget: "string", hint: "Direct link to an .mp3 file" }
+          - label: "Invitation"
+            name: "invitation"
+            widget: "object"
+            fields:
+              - { label: "Eyebrow", name: "eyebrow", widget: "string" }
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Message", name: "message", widget: "text" }
+              - { label: "RSVP Button Text", name: "rsvpText", widget: "string" }
+          - label: "Our Story"
             name: "story"
             widget: "list"
+            summary: "{{fields.year}} — {{fields.title}}"
             fields:
               - { label: "Year", name: "year", widget: "string" }
               - { label: "Title", name: "title", widget: "string" }
               - { label: "Text", name: "text", widget: "text" }
-          - label: "Details"
+          - label: "Event Details"
             name: "details"
             widget: "list"
+            summary: "{{fields.title}}"
             fields:
               - { label: "Title", name: "title", widget: "string" }
               - { label: "Time", name: "time", widget: "string" }
               - { label: "Place", name: "place", widget: "string" }
               - { label: "Address", name: "address", widget: "string" }
-              - { label: "Map URL", name: "mapUrl", widget: "string" }
+              - { label: "Map URL", name: "mapUrl", widget: "string", required: false }
           - label: "Gallery"
             name: "gallery"
             widget: "list"
-            field: { label: "Image", name: "image", widget: "image" }
+            summary: "{{field}}"
+            field: { label: "Image URL", name: "image", widget: "string", hint: "Direct image link (https://...)" }
           - label: "Wedding Party"
             name: "party"
             widget: "list"
+            summary: "{{fields.name}}"
             fields:
               - { label: "Initial", name: "initial", widget: "string" }
               - { label: "Name", name: "name", widget: "string" }
               - { label: "Role", name: "role", widget: "string" }
-              - { label: "Note", name: "note", widget: "string" }
+              - { label: "Note", name: "note", widget: "string", required: false }
           - label: "FAQ"
             name: "faq"
             widget: "list"
+            summary: "{{fields.q}}"
             fields:
               - { label: "Question", name: "q", widget: "string" }
               - { label: "Answer", name: "a", widget: "text" }
