@@ -33,6 +33,12 @@ const DEFAULT_CONTENT = {
     musicUrl: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=romantic-piano-112199.mp3",
     coverImage: ""
   },
+  invitation: {
+    eyebrow: "You are cordially invited",
+    title: "to the wedding of",
+    message: "Together with our families, we invite you to share in our joy as we unite in marriage.",
+    rsvpText: "RSVP Now"
+  },
   story: [
     { year: "2019", title: "First Meeting", text: "A chance encounter that changed everything. One conversation turned into a thousand." },
     { year: "2021", title: "First Trip Together", text: "Exploring the shores of Lake Malawi, we knew this was forever." },
@@ -75,6 +81,7 @@ function mergeDefaults(saved) {
     site: Object.assign(base.site, saved.site || {}),
     couple: Object.assign(base.couple, saved.couple || {}),
     media: Object.assign(base.media, saved.media || {}),
+    invitation: Object.assign(base.invitation, saved.invitation || {}),
     story: saved.story || base.story,
     details: saved.details || base.details,
     gallery: saved.gallery || base.gallery,

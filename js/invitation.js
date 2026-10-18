@@ -30,6 +30,9 @@ if (guest) guestLine.textContent = `Dear ${decodeURIComponent(guest)},`;
 
 document.getElementById('invNames').textContent = `${couple.groom} & ${couple.bride}`;
 document.getElementById('invDate').textContent = couple.dateDisplay;
+const inv = C.invitation || {};
+if (inv.eyebrow) document.getElementById('invEyebrow').textContent = inv.eyebrow;
+if (inv.rsvpText) document.getElementById('invRsvpBtn').textContent = inv.rsvpText;
 document.title = `You're Invited — ${couple.groom} & ${couple.bride}`;
 const d0 = C.details[0], d1 = C.details[1] || C.details[0];
 document.getElementById('invVenue').innerHTML = `${d0.title} · ${d0.time} · ${d0.place}<br/>${d1.title} · ${d1.time} · ${d1.place}`;
