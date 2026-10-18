@@ -6,7 +6,7 @@ site_url: "https://astonie.github.io/amukiwa/"
 display_url: "https://astonie.github.io/amukiwa/"
 
 media_folder: "assets/uploads"
-public_folder: "/assets/uploads"
+public_folder: "assets/uploads"
 
 collections:
   - name: "content"

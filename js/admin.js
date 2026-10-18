@@ -167,8 +167,8 @@ function renderMedia() {
       <div class="field"><label>Cover image URL</label><input id="m_cover" value="${escapeAttr(m.coverImage || '')}" placeholder="https://..."></div>
     </div>
     <div class="field"><label>Background music URL</label><input id="m_music" value="${escapeAttr(m.musicUrl || '')}" placeholder="https://...mp3"></div>
-    <div class="field"><label>Upload images</label><input type="file" id="m_upload" accept="image/*" multiple></div>
-    <p class="muted" style="font-size:12px">Uploaded images are stored in this browser. For production, host externally and paste URLs, or Publish to commit them.</p>
+    <div class="field"><label>Upload images (optional, max 300 KB each)</label><input type="file" id="m_upload" accept="image/*" multiple></div>
+    <p class="muted" style="font-size:12px">Small uploads are embedded inline. For real photos, upload them to <code>assets/uploads/</code> on your host and paste the relative path (e.g. <code>assets/uploads/photo.jpg</code>) — this keeps content.json small enough to publish.</p>
     <h3 style="margin:18px 0 10px;font-size:20px;color:var(--burgundy)">Media Library</h3>
     <div class="media-grid" id="mediaGrid"></div>
 
@@ -197,6 +197,10 @@ function renderMedia() {
   }));
   el.querySelector('#m_upload').addEventListener('change', e => {
     [...e.target.files].forEach(file => {
+      if (file.size > 300 * 1024) {
+        alert(`"${file.name}" is ${Math.round(file.size / 1024)} KB. Inline images bloat content.json and break GitHub publishing (limit ~1 MB).\n\nUse a hosted image URL instead, or compress below 300 KB.`);
+        return;
+      }
       const reader = new FileReader();
       reader.onload = ev => { state.gallery.unshift(ev.target.result); renderMedia(); toast('Image added'); };
       reader.readAsDataURL(file);
@@ -224,16 +228,8 @@ function renderMedia() {
     toast('Track added');
   });
   el.querySelector('#m_audio').addEventListener('change', e => {
-    [...e.target.files].forEach(file => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        state.media.playlist = state.media.playlist || [];
-        state.media.playlist.push({ title: file.name.replace(/\.[^.]+$/, ''), url: ev.target.result });
-        renderMedia();
-        toast('Audio added');
-      };
-      reader.readAsDataURL(file);
-    });
+    e.target.value = '';
+    alert('Audio cannot be embedded in content.json (it would exceed GitHub\'s size limit).\n\nAdd the track by URL instead: paste a direct link to an .mp3 file (e.g. SoundCloud/Pixabay download link, or a file hosted on your server).');
   });
   pl.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => {
     state.media.playlist.splice(+e.target.dataset.idx, 1);
@@ -561,6 +557,10 @@ async function publishToGitHub() {
   if (!s.token || !s.repo) return false;
   gather();
   const json = JSON.stringify(state, null, 2);
+  if (json.length > 700000) {
+    lastPublishError = `content.json is too large (${Math.round(json.length / 1024)} KB) — GitHub's API limit is about 1 MB once encoded.\n\nThis usually means uploaded images are stored inline as base64. Fix: in Media, replace them with hosted image URLs (e.g. upload to assets/uploads/ or an image host) and clear the inline data.`;
+    return false;
+  }
   const content = btoa(unescape(encodeURIComponent(json)));
   const api = `https://api.github.com/repos/${s.repo}/contents/${s.path || 'content.json'}`;
   try {
