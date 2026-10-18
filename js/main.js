@@ -228,6 +228,8 @@ music.volume = +volume.value;
 music.addEventListener('ended', () => { loadTrack(current + 1); music.play().then(() => { playing = true; playBtn.textContent = '⏸'; }).catch(() => {}); });
 loadTrack(0);
 renderPlaylist();
+// attempt autoplay (may be blocked by browser until interaction)
+music.play().then(() => { playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫'; }).catch(() => {});
 
 window.launchConfetti = launchConfetti;
 }
