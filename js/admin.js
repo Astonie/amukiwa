@@ -253,6 +253,7 @@ function renderPublish() {
     <div class="field"><label>File path</label><input id="gh_path" value="${escapeAttr(settings.path||'content.json')}"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
       <button class="btn-sm" id="saveGh">Save Settings</button>
+      <button class="btn-sm btn-outline" id="testGh">Test Connection</button>
       <button class="btn-sm" id="publishBtn">Publish content.json</button>
     </div>
     <div id="publishStatus" style="margin-top:12px;font-size:13px"></div>
@@ -266,6 +267,21 @@ function renderPublish() {
     };
     localStorage.setItem('ghSettings', JSON.stringify(s));
     toast('Settings saved');
+  });
+  document.getElementById('testGh').addEventListener('click', async () => {
+    const status = document.getElementById('publishStatus');
+    const s = {
+      token: document.getElementById('gh_token').value.trim(),
+      repo: document.getElementById('gh_repo').value.trim(),
+      branch: document.getElementById('gh_branch').value.trim(),
+    };
+    status.textContent = 'Testing...';
+    try {
+      const res = await fetch(`https://api.github.com/repos/${s.repo}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
+      if (!res.ok) throw new Error((await res.json()).message || res.statusText);
+      const data = await res.json();
+      status.textContent = `Connected: ${data.full_name} (${data.permissions?.push ? 'push OK' : 'no push permission'})`;
+    } catch (e) { status.textContent = 'Error: ' + e.message; }
   });
   document.getElementById('publishBtn').addEventListener('click', async () => {
     const status = document.getElementById('publishStatus');
