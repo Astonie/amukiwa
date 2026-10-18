@@ -25,6 +25,20 @@ Content edits become Git commits, so they survive across browsers/devices and au
 3. Framework Preset = Other; Build Command = (empty); Output Directory = `.` (or leave default).
 4. Vercel auto-deploys on every push to `main`.
 
+## Hostinger (shared hosting, File Manager)
+This site is static HTML — no PHP/framework/build step required. If hPanel says "Unsupported framework or invalid project structure", skip its auto-deploy and upload manually:
+1. Log in to hPanel → **Hosting** → your plan → **File Manager** → open `public_html/`.
+2. Upload the **contents** of the `wedding/` folder (not the folder itself) so `index.html` sits directly in `public_html/`.
+3. Delete any default files (`index.php`, `default.html`, WordPress folders).
+4. hPanel → **Domains** → your domain → make sure it points to this hosting plan.
+5. hPanel → **SSL** → install the free Let's Encrypt certificate (`.htaccess` forces HTTPS).
+6. Edit content anytime: File Manager → `content.json` → edit and save. (`.htaccess` already sets `no-store` so updates appear instantly.)
+
+Notes:
+- `/admin/` (Decap/Netlify CMS) will not work on Hostinger — it needs Netlify Identity. Use File Manager for `content.json`, or `/admin.html` with a GitHub PAT.
+- `.htaccess` included: HTTPS redirect, caching, compression, 404 page.
+
+
 ## Free hosting options (manual)
 - **Netlify** (recommended for the CMS): connect a Git repo at https://app.netlify.com/start. `netlify.toml` included. Drag-and-drop works for hosting but disables CMS publishing.
 - **Vercel**: `vercel` CLI or import repo; `vercel.json` included.
