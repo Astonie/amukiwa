@@ -11,6 +11,7 @@ const tabs = [
   { id: 'faq', label: 'FAQ' },
   { id: 'rsvps', label: 'RSVPs' },
   { id: 'guestbook', label: 'Guestbook' },
+  { id: 'publish', label: 'Publish' },
 ];
 const tabsEl = document.getElementById('tabs');
 const panelsEl = document.getElementById('panels');
@@ -237,7 +238,73 @@ function renderGuestbook() {
   }));
   el.querySelector('#clearGb').addEventListener('click', () => { if(confirm('Clear all messages?')){ localStorage.removeItem('gb'); renderGuestbook(); } });
 }
-renderGuestbook();
+renderGuestbook(); renderPublish();
+
+// Publish panel
+function renderPublish() {
+  const settings = JSON.parse(localStorage.getItem('ghSettings')||'{}');
+  document.getElementById('panel-publish').innerHTML = `
+    <p class="muted" style="margin-bottom:14px">Publish your content to GitHub so all visitors see it. Requires a GitHub Personal Access Token with repo write access.</p>
+    <div class="field"><label>GitHub Token (PAT)</label><input id="gh_token" type="password" value="${escapeAttr(settings.token||'')}" placeholder="ghp_..."></div>
+    <div class="row">
+      <div class="field"><label>Repository</label><input id="gh_repo" value="${escapeAttr(settings.repo||'Astonie/amukiwa')}"></div>
+      <div class="field"><label>Branch</label><input id="gh_branch" value="${escapeAttr(settings.branch||'main')}"></div>
+    </div>
+    <div class="field"><label>File path</label><input id="gh_path" value="${escapeAttr(settings.path||'content.json')}"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      <button class="btn-sm" id="saveGh">Save Settings</button>
+      <button class="btn-sm" id="publishBtn">Publish content.json</button>
+    </div>
+    <div id="publishStatus" style="margin-top:12px;font-size:13px"></div>
+    <p class="muted" style="font-size:12px;margin-top:14px">Create a token: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained or classic with repo write. Stored only in this browser.</p>`;
+  document.getElementById('saveGh').addEventListener('click', () => {
+    const s = {
+      token: document.getElementById('gh_token').value.trim(),
+      repo: document.getElementById('gh_repo').value.trim(),
+      branch: document.getElementById('gh_branch').value.trim(),
+      path: document.getElementById('gh_path').value.trim(),
+    };
+    localStorage.setItem('ghSettings', JSON.stringify(s));
+    toast('Settings saved');
+  });
+  document.getElementById('publishBtn').addEventListener('click', async () => {
+    const status = document.getElementById('publishStatus');
+    status.textContent = 'Publishing...';
+    const s = {
+      token: document.getElementById('gh_token').value.trim(),
+      repo: document.getElementById('gh_repo').value.trim(),
+      branch: document.getElementById('gh_branch').value.trim(),
+      path: document.getElementById('gh_path').value.trim(),
+    };
+    localStorage.setItem('ghSettings', JSON.stringify(s));
+    gather();
+    const json = JSON.stringify(state, null, 2);
+    const content = btoa(unescape(encodeURIComponent(json)));
+    const api = `https://api.github.com/repos/${s.repo}/contents/${s.path}`;
+    try {
+      // get sha if exists
+      let sha = null;
+      const getRes = await fetch(`${api}?ref=${s.branch}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
+      if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
+      const body = { message: 'Update content.json via admin', content, branch: s.branch };
+      if (sha) body.sha = sha;
+      const putRes = await fetch(api, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!putRes.ok) {
+        const err = await putRes.json();
+        throw new Error(err.message || putRes.statusText);
+      }
+      status.textContent = 'Published! Site will redeploy shortly.';
+      toast('Published');
+    } catch (e) {
+      status.textContent = 'Error: ' + e.message;
+    }
+  });
+}
+renderPublish();
 
 // Save logic: gather from DOM into state
 function gather() {
@@ -306,7 +373,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   if (confirm('Reset all content to defaults?')) {
     resetContent();
     state = getContent();
-    renderSite(); renderCouple(); renderMedia(); renderStory(); renderDetails(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook();
+    renderSite(); renderCouple(); renderMedia(); renderStory(); renderDetails(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook(); renderPublish();
     toast('Reset to defaults');
   }
 });
@@ -326,7 +393,7 @@ document.getElementById('fileInput').addEventListener('change', e => {
     try {
       state = JSON.parse(ev.target.result);
       saveContent(state);
-      renderSite(); renderCouple(); renderMedia(); renderStory(); renderDetails(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook();
+      renderSite(); renderCouple(); renderMedia(); renderStory(); renderDetails(); renderParty(); renderFaq(); renderRsvps(); renderGuestbook(); renderPublish();
       toast('Imported');
     } catch(err){ alert('Invalid JSON'); }
   };
