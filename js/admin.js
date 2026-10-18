@@ -406,21 +406,9 @@ function renderPublish() {
     status.textContent = 'Publishing...';
     const s = { token: document.getElementById('gh_token').value.trim(), repo: document.getElementById('gh_repo').value.trim(), branch: document.getElementById('gh_branch').value.trim(), path: document.getElementById('gh_path').value.trim() };
     localStorage.setItem('ghSettings', JSON.stringify(s));
-    gather();
-    const json = JSON.stringify(state, null, 2);
-    const content = btoa(unescape(encodeURIComponent(json)));
-    const api = `https://api.github.com/repos/${s.repo}/contents/${s.path}`;
-    try {
-      let sha = null;
-      const getRes = await fetch(`${api}?ref=${s.branch}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
-      if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
-      const body = { message: 'Update content.json via admin', content, branch: s.branch };
-      if (sha) body.sha = sha;
-      const putRes = await fetch(api, { method: 'PUT', headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (!putRes.ok) { const err = await putRes.json(); throw new Error(err.message || putRes.statusText); }
-      status.textContent = 'Published! Site will redeploy shortly.';
-      toast('Published');
-    } catch (e) { status.textContent = 'Error: ' + e.message; }
+    const ok = await publishToGitHub();
+    if (ok) { status.textContent = 'Published! Site will redeploy shortly.'; toast('Published'); }
+    else { status.textContent = 'Publish failed — check token/repo/branch in console (F12).'; }
   });
 }
 
@@ -432,9 +420,34 @@ function renderSettings() {
     <div class="field"><label>Admin password</label><input id="set_pass" type="text" value="${escapeAttr(pass)}"></div>
     <button class="btn-sm" id="savePass">Save Password</button>
     <div style="margin-top:16px">
+      <button class="btn-sm btn-outline" id="exportC">Export content.json</button>
+      <button class="btn-sm btn-outline" id="importC">Import content.json</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
       <button class="btn-sm btn-outline" id="clearPreview">Clear local preview data</button>
     </div>
     <p class="muted" style="font-size:12px;margin-top:12px">Password stored in this browser only. Clear preview data if the site shows stale content.</p>`;
+  document.getElementById('exportC').addEventListener('click', () => {
+    gather();
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'content.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Exported');
+  });
+  document.getElementById('importC').addEventListener('click', () => document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    f.text().then(t => {
+      const parsed = JSON.parse(t);
+      state = WC.mergeDefaults ? WC.mergeDefaults(parsed) : Object.assign({}, state, parsed);
+      WC.saveContent(state);
+      toast('Imported and saved locally');
+      renderDashboard();
+    }).catch(() => alert('Invalid JSON file'));
+  });
   document.getElementById('savePass').addEventListener('click', () => {
     localStorage.setItem('adminPassword', document.getElementById('set_pass').value);
     toast('Password saved');
@@ -513,11 +526,43 @@ function gather() {
 }
 
 // Save
-document.getElementById('saveBtn').addEventListener('click', () => {
+async function publishToGitHub() {
+  const s = JSON.parse(localStorage.getItem('ghSettings') || '{}');
+  if (!s.token || !s.repo) return false;
+  gather();
+  const json = JSON.stringify(state, null, 2);
+  const content = btoa(unescape(encodeURIComponent(json)));
+  const api = `https://api.github.com/repos/${s.repo}/contents/${s.path || 'content.json'}`;
+  try {
+    let sha = null;
+    const getRes = await fetch(`${api}?ref=${s.branch || 'main'}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
+    if (getRes.ok) { const data = await getRes.json(); sha = data.sha; }
+    const body = { message: 'Update content.json via admin', content, branch: s.branch || 'main' };
+    if (sha) body.sha = sha;
+    const putRes = await fetch(api, { method: 'PUT', headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!putRes.ok) { const err = await putRes.json(); throw new Error(err.message || putRes.statusText); }
+    return true;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
   gather();
   const ok = WC.saveContent(state);
-  if (ok) { toast('Saved'); renderDashboard(); }
-  else { alert('Save failed: storage quota exceeded. Remove large uploaded images/audio or publish to GitHub.'); }
+  if (!ok) { alert('Save failed: storage quota exceeded. Remove large uploaded images/audio or publish to GitHub.'); return; }
+  toast('Saved');
+  renderDashboard();
+  // auto-publish if GitHub token configured
+  const s = JSON.parse(localStorage.getItem('ghSettings') || '{}');
+  if (s.token) {
+    const pub = await publishToGitHub();
+    if (pub) toast('Published to GitHub');
+    else alert('Saved locally, but publishing failed. Open the Publish tab → Test Connection.');
+  } else {
+    alert('Saved to this browser only — visitors still see the old site.\n\nTo make changes live: open the Publish tab, paste a GitHub token, then click "Publish content.json".');
+  }
 });
 
 // Reset
