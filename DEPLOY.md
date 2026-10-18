@@ -3,6 +3,15 @@
 ## Auto-deploy (GitHub Pages)
 This repo includes `.github/workflows/deploy-wedding.yml`. On every push to `main` that touches `wedding/`, the site is published to the `gh-pages` branch automatically. Enable Pages once: repo → Settings → Pages → Source = `gh-pages` branch, root. Live at `https://astonie.github.io/roadwise-malawi/`.
 
+## Proper CMS (Decap + Netlify)
+For a full CMS with login, media uploads, and Git commits:
+1. Deploy the site to Netlify (import repo, root = `wedding` or `.`).
+2. In Netlify: Site settings → Identity → Enable Identity.
+3. Under Identity → Services → Enable Git Gateway.
+4. Invite users (the couple) via Identity → Invite users.
+5. Visit `/admin/` → log in → edit content/media → Publish (commits to repo → auto-deploys).
+Media uploads are stored in `assets/uploads/`.
+
 ## Auto-deploy (Vercel)
 1. Import `Astonie/roadwise-malawi` in Vercel.
 2. Set **Root Directory** = `wedding`.

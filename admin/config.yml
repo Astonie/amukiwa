@@ -1,0 +1,88 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+
+collections:
+  - name: "content"
+    label: "Wedding Content"
+    files:
+      - label: "Site Content"
+        name: "content"
+        file: "content.json"
+        fields:
+          - label: "Site Text"
+            name: "site"
+            widget: "object"
+            fields:
+              - { label: "Hero Eyebrow", name: "eyebrow", widget: "string" }
+              - { label: "Story Title", name: "storyTitle", widget: "string" }
+              - { label: "Story Subtitle", name: "storySub", widget: "string" }
+              - { label: "Details Title", name: "detailsTitle", widget: "string" }
+              - { label: "Details Subtitle", name: "detailsSub", widget: "string" }
+              - { label: "Gallery Title", name: "galleryTitle", widget: "string" }
+              - { label: "Gallery Subtitle", name: "gallerySub", widget: "string" }
+              - { label: "Party Title", name: "partyTitle", widget: "string" }
+              - { label: "Party Subtitle", name: "partySub", widget: "string" }
+              - { label: "RSVP Title", name: "rsvpTitle", widget: "string" }
+              - { label: "RSVP Subtitle", name: "rsvpSub", widget: "string" }
+              - { label: "FAQ Title", name: "faqTitle", widget: "string" }
+              - { label: "FAQ Subtitle", name: "faqSub", widget: "string" }
+              - { label: "Guestbook Title", name: "guestbookTitle", widget: "string" }
+              - { label: "Guestbook Subtitle", name: "guestbookSub", widget: "string" }
+              - { label: "Footer Message", name: "footerMessage", widget: "string" }
+          - label: "Couple"
+            name: "couple"
+            widget: "object"
+            fields:
+              - { label: "Groom", name: "groom", widget: "string" }
+              - { label: "Bride", name: "bride", widget: "string" }
+              - { label: "Date (ISO)", name: "dateISO", widget: "string" }
+              - { label: "Date Display", name: "dateDisplay", widget: "string" }
+              - { label: "Location", name: "location", widget: "string" }
+              - { label: "Venue", name: "venue", widget: "string" }
+              - { label: "Hashtag", name: "hashtag", widget: "string" }
+              - { label: "RSVP Deadline", name: "rsvpDeadline", widget: "string" }
+          - label: "Media"
+            name: "media"
+            widget: "object"
+            fields:
+              - { label: "Hero Image", name: "heroImage", widget: "image", required: false }
+              - { label: "Cover Image", name: "coverImage", widget: "image", required: false }
+              - { label: "Music URL", name: "musicUrl", widget: "string" }
+          - label: "Story"
+            name: "story"
+            widget: "list"
+            fields:
+              - { label: "Year", name: "year", widget: "string" }
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Text", name: "text", widget: "text" }
+          - label: "Details"
+            name: "details"
+            widget: "list"
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Time", name: "time", widget: "string" }
+              - { label: "Place", name: "place", widget: "string" }
+              - { label: "Address", name: "address", widget: "string" }
+              - { label: "Map URL", name: "mapUrl", widget: "string" }
+          - label: "Gallery"
+            name: "gallery"
+            widget: "list"
+            field: { label: "Image", name: "image", widget: "image" }
+          - label: "Wedding Party"
+            name: "party"
+            widget: "list"
+            fields:
+              - { label: "Initial", name: "initial", widget: "string" }
+              - { label: "Name", name: "name", widget: "string" }
+              - { label: "Role", name: "role", widget: "string" }
+              - { label: "Note", name: "note", widget: "string" }
+          - label: "FAQ"
+            name: "faq"
+            widget: "list"
+            fields:
+              - { label: "Question", name: "q", widget: "string" }
+              - { label: "Answer", name: "a", widget: "text" }
