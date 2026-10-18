@@ -431,10 +431,17 @@ function renderSettings() {
     <h2>Settings</h2>
     <div class="field"><label>Admin password</label><input id="set_pass" type="text" value="${escapeAttr(pass)}"></div>
     <button class="btn-sm" id="savePass">Save Password</button>
-    <p class="muted" style="font-size:12px;margin-top:12px">Password stored in this browser only.</p>`;
+    <div style="margin-top:16px">
+      <button class="btn-sm btn-outline" id="clearPreview">Clear local preview data</button>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:12px">Password stored in this browser only. Clear preview data if the site shows stale content.</p>`;
   document.getElementById('savePass').addEventListener('click', () => {
     localStorage.setItem('adminPassword', document.getElementById('set_pass').value);
     toast('Password saved');
+  });
+  document.getElementById('clearPreview').addEventListener('click', () => {
+    localStorage.removeItem('weddingContent');
+    toast('Local preview data cleared');
   });
 }
 
