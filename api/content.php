@@ -10,12 +10,11 @@ try {
 
     if ($method === 'GET') {
         $row = db()->query('SELECT data FROM content WHERE id = 1')->fetch();
-        if ($row && $row['data']) {
-            json_out(json_decode($row['data'], true) ?: new stdClass());
-        }
-        // No DB content yet — serve the static seed.
-        $seed = @file_get_contents(__DIR__ . '/../content.json');
-        json_out(json_decode($seed ?: '{}', true) ?: new stdClass());
+        $stored = ($row && $row['data']) ? (json_decode($row['data'], true) ?: []) : [];
+        // Always serve the seed as the base so every required section exists,
+        // even if the stored copy is partial or was overwritten with test data.
+        $out = deep_merge(seed_content(), is_array($stored) ? $stored : []);
+        json_out($out ?: new stdClass());
     }
 
     if ($method === 'POST' || $method === 'PUT') {

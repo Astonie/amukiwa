@@ -155,3 +155,27 @@ function seed_content_from_json(): void
     $stmt = db()->prepare('INSERT INTO content (id, data, updated_at) VALUES (1, ?, ?)');
     $stmt->execute([json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), gmdate('Y-m-d H:i:s')]);
 }
+
+/**
+ * Recursively merge $base with $override. $override wins on conflicts,
+ * but $base keeps any keys/sections that $override is missing, so a
+ * partial save can never leave the site without required content.
+ */
+function deep_merge(array $base, array $override): array
+{
+    foreach ($override as $k => $v) {
+        if (is_array($v) && is_array($base[$k] ?? null) && !array_is_list($v)) {
+            $base[$k] = deep_merge($base[$k], $v);
+        } else {
+            $base[$k] = $v;
+        }
+    }
+    return $base;
+}
+
+function seed_content(): array
+{
+    $file = __DIR__ . '/../content.json';
+    $data = json_decode(@file_get_contents($file) ?: '{}', true);
+    return is_array($data) ? $data : [];
+}

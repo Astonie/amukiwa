@@ -15,6 +15,8 @@ async function loadContent() {
     } catch (e) {}
   }
   if (!base) base = JSON.parse(JSON.stringify(WC.DEFAULT_CONTENT));
+  // Always fill any missing sections from defaults so the page can't break
+  base = WC.mergeDefaults ? WC.mergeDefaults(base) : base;
   const preview = new URLSearchParams(location.search).get('preview') === '1' || sessionStorage.getItem('adminPreview') === '1';
   if (preview) {
     try {
@@ -32,7 +34,17 @@ async function loadContent() {
   return base;
 }
 
-loadContent().then(C => { init(C); });
+loadContent().then(C => {
+  try { init(C); }
+  catch (e) {
+    console.error('Invitation init failed', e);
+    // Fail-safe: reveal the card even if content is incomplete
+    const es = document.getElementById('envelopeStage');
+    const cs = document.getElementById('cardStage');
+    if (es) es.style.display = 'none';
+    if (cs) cs.style.display = 'block';
+  }
+});
 
 function init(C) {
 const couple = C.couple;

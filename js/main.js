@@ -15,6 +15,8 @@ async function loadContent() {
     } catch (e) {}
   }
   if (!base) base = JSON.parse(JSON.stringify(WC.DEFAULT_CONTENT));
+  // Always fill any missing sections from defaults so the page can't break
+  base = WC.mergeDefaults ? WC.mergeDefaults(base) : base;
   // merge localStorage overrides only in preview mode
   const preview = new URLSearchParams(location.search).get('preview') === '1' || sessionStorage.getItem('adminPreview') === '1';
   if (preview) {
@@ -33,7 +35,14 @@ async function loadContent() {
   return base;
 }
 
-loadContent().then(C => { init(C); });
+loadContent().then(C => {
+  try { init(C); }
+  catch (e) {
+    console.error('Site init failed', e);
+    const pre = document.getElementById('preloader');
+    if (pre) pre.style.display = 'none';
+  }
+});
 
 function init(C) {
   const pre = document.getElementById('preloader');
