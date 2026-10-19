@@ -68,16 +68,16 @@
   ],
   "details": [
     {
-      "title": "Ceremony",
-      "time": "2:00 PM",
+      "title": "Luncheon",
+      "time": "1:00 PM",
       "place": "Golden Peacock Hotel",
       "address": "Blantyre, Malawi",
       "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
     },
     {
       "title": "Reception",
-      "time": "5:00 PM",
-      "place": "Golden Peacock Hotel",
+      "time": "2:00 PM - 4:30 PM",
+      "place": "Mzimba Hall - Golden Peacock Hotel",
       "address": "Blantyre, Malawi",
       "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
     }
@@ -91,26 +91,26 @@
   ],
   "party": [
     {
-      "initial": "J",
-      "name": "James Banda",
+      "initial": "P",
+      "name": "Promise Mphoola",
       "role": "Best Man",
-      "note": "Brother of the groom"
+      "note": "Friend of the groom"
     },
     {
-      "initial": "M",
-      "name": "Mercy Phiri",
+      "initial": "P",
+      "name": "Prisca",
       "role": "Maid of Honor",
       "note": "Best friend of the bride"
     },
     {
-      "initial": "D",
-      "name": "Daniel Chirwa",
+      "initial": "P",
+      "name": "Prince Kennedy",
       "role": "Groomsman",
       "note": "Childhood friend"
     },
     {
-      "initial": "G",
-      "name": "Grace Mwale",
+      "initial": "M",
+      "name": "Miriam",
       "role": "Bridesmaid",
       "note": "Sister of the bride"
     }
