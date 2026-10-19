@@ -1,0 +1,7 @@
+Options -Indexes
+<IfModule mod_mime.c>
+</IfModule>
+# Allow only images/audio by default? Hostinger shared; basic
+<FilesMatch "\.(php|phtml|phps|cgi)$">
+  Deny from all
+</FilesMatch>

@@ -2,9 +2,18 @@ async function loadContent() {
   const WC = window.WeddingContent;
   let base = null;
   try {
-    const r = await fetch('content.json', { cache: 'no-store' });
-    if (r.ok) base = await r.json();
+    const r = await fetch('api/content.php', { cache: 'no-store' });
+    if (r.ok) {
+      const data = await r.json();
+      if (data && !data.error) base = data;
+    }
   } catch (e) {}
+  if (!base) {
+    try {
+      const r2 = await fetch('content.json', { cache: 'no-store' });
+      if (r2.ok) base = await r2.json();
+    } catch (e) {}
+  }
   if (!base) base = JSON.parse(JSON.stringify(WC.DEFAULT_CONTENT));
   const preview = new URLSearchParams(location.search).get('preview') === '1' || sessionStorage.getItem('adminPreview') === '1';
   if (preview) {
@@ -12,7 +21,7 @@ async function loadContent() {
       const raw = localStorage.getItem('weddingContent');
       if (raw) {
         const saved = JSON.parse(raw);
-        base = Object.assign(JSON.parse(JSON.stringify(base)), saved);
+        base = WC.mergeDefaults ? WC.mergeDefaults(Object.assign(JSON.parse(JSON.stringify(base)), saved)) : Object.assign(JSON.parse(JSON.stringify(base)), saved);
         if (saved.site) base.site = Object.assign({}, base.site, saved.site);
         if (saved.couple) base.couple = Object.assign({}, base.couple, saved.couple);
         if (saved.media) base.media = Object.assign({}, base.media, saved.media);

@@ -35,3 +35,11 @@ Options -Indexes
 </IfModule>
 
 ErrorDocument 404 /404.html
+
+
+# Prevent listing uploads (if needed, also lock)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+</IfModule>
+
+# Block direct execution? but api/*.php are intended; keep as is

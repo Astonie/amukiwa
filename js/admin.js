@@ -20,7 +20,45 @@ const tabs = [
 // Password gate
 const loginScreen = document.getElementById('loginScreen');
 const adminApp = document.getElementById('adminApp');
-function checkAuth() {
+let apiAuthed = false;
+let apiUsername = null;
+let apiCsrf = null;
+
+async function apiSession() {
+  try {
+    const r = await fetch('api/session.php', { cache: 'no-store', credentials: 'same-origin' });
+    if (!r.ok) return { authed: false };
+    const j = await r.json();
+    return j;
+  } catch (e) { return { authed: false }; }
+}
+async function apiLogin(username, password) {
+  try {
+    const r = await fetch('api/login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ username, password })
+    });
+    const j = await r.json();
+    return j;
+  } catch (e) { return { error: 'Network error' }; }
+}
+async function apiLogout() {
+  try { await fetch('api/logout.php', { method: 'POST', credentials: 'same-origin' }); } catch (e) {}
+}
+
+async function checkAuth() {
+  const sess = await apiSession();
+  if (sess.authed) {
+    apiAuthed = true; apiUsername = sess.username || 'admin'; apiCsrf = sess.csrf || null;
+    sessionStorage.setItem('adminAuth', '1');
+    sessionStorage.setItem('adminPreview', '1');
+    loginScreen.style.display = 'none';
+    adminApp.style.display = 'block';
+    initAdmin();
+    return;
+  }
   if (sessionStorage.getItem('adminAuth') === '1') {
     sessionStorage.setItem('adminPreview', '1');
     loginScreen.style.display = 'none';
@@ -28,20 +66,34 @@ function checkAuth() {
     initAdmin();
   }
 }
-document.getElementById('loginBtn').addEventListener('click', () => {
+document.getElementById('loginBtn').addEventListener('click', async () => {
   const pass = document.getElementById('loginPass').value;
-  const stored = localStorage.getItem('adminPassword') || 'admin';
-  if (pass === stored) {
+  const user = 'admin';
+  const res = await apiLogin(user, pass);
+  if (res && res.ok) {
+    const sess = await apiSession();
+    apiAuthed = true; apiUsername = sess.username || res.username || user; apiCsrf = sess.csrf || res.csrf || null;
     sessionStorage.setItem('adminAuth', '1');
     sessionStorage.setItem('adminPreview', '1');
     loginScreen.style.display = 'none';
     adminApp.style.display = 'block';
     initAdmin();
   } else {
-    alert('Wrong password');
+    const stored = localStorage.getItem('adminPassword') || 'admin';
+    if (pass === stored) {
+      sessionStorage.setItem('adminAuth', '1');
+      sessionStorage.setItem('adminPreview', '1');
+      loginScreen.style.display = 'none';
+      adminApp.style.display = 'block';
+      initAdmin();
+    } else {
+      alert(res && res.error ? res.error : 'Wrong password');
+    }
   }
 });
-document.getElementById('logoutBtn').addEventListener('click', () => {
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await apiLogout();
+  apiAuthed = false; apiUsername = null; apiCsrf = null;
   sessionStorage.removeItem('adminAuth');
   location.reload();
 });
@@ -88,9 +140,19 @@ function renderAll() {
 }
 
 // Dashboard
-function renderDashboard() {
-  const rsvps = JSON.parse(localStorage.getItem('rsvp') || '[]');
-  const gb = JSON.parse(localStorage.getItem('gb') || '[]');
+async function renderDashboard() {
+  let rsvps = JSON.parse(localStorage.getItem('rsvp') || '[]');
+  let gb = JSON.parse(localStorage.getItem('gb') || '[]');
+  if (apiAuthed) {
+    try {
+      const [rs, gs] = await Promise.all([
+        fetch('api/rsvp.php', { credentials: 'same-origin' }),
+        fetch('api/guestbook.php', { credentials: 'same-origin' })
+      ]);
+      if (rs.ok) { const j = await rs.json(); if (j.ok && Array.isArray(j.rsvp)) rsvps = j.rsvp; }
+      if (gs.ok) { const j = await gs.json(); if (j.ok && Array.isArray(j.guestbook)) gb = j.guestbook; }
+    } catch (e) {}
+  }
   document.getElementById('panel-dashboard').innerHTML = `
     <h2>Dashboard</h2>
     <div class="row">
@@ -318,8 +380,14 @@ function renderFaq() {
 }
 
 // RSVPs
-function renderRsvps() {
-  const list = JSON.parse(localStorage.getItem('rsvp') || '[]');
+async function renderRsvps() {
+  let list = JSON.parse(localStorage.getItem('rsvp') || '[]');
+  if (apiAuthed) {
+    try {
+      const r = await fetch('api/rsvp.php', { credentials: 'same-origin' });
+      if (r.ok) { const j = await r.json(); if (j.ok && Array.isArray(j.rsvp)) list = j.rsvp; }
+    } catch (e) {}
+  }
   const el = document.getElementById('panel-rsvps');
   if (!list.length) { el.innerHTML = '<h2>RSVPs</h2><p class="muted">No RSVPs yet.</p>'; return; }
   el.innerHTML = `<h2>RSVPs</h2><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Attend</th><th>Guests</th><th>Diet</th><th>Message</th><th>Date</th></tr></thead><tbody></tbody></table>
@@ -327,12 +395,24 @@ function renderRsvps() {
   const tbody = el.querySelector('tbody');
   list.forEach(r => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${escapeHtml(r.first || '')} ${escapeHtml(r.last || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.attend || '')}</td><td>${escapeHtml(r.guests || '')}</td><td>${escapeHtml(r.diet || '')}</td><td>${escapeHtml(r.msg || '')}</td><td>${new Date(r.ts).toLocaleString()}</td>`;
+    tr.innerHTML = `<td>${escapeHtml(r.first || r.name || '')} ${escapeHtml(r.last || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.attend || r.attending || '')}</td><td>${escapeHtml(r.guests || '')}</td><td>${escapeHtml(r.diet || '')}</td><td>${escapeHtml(r.msg || r.message || '')}</td><td>${r.ts ? new Date(r.ts).toLocaleString() : (r.created_at || '')}</td>`;
     tbody.appendChild(tr);
   });
-  el.querySelector('#clearRsvp').addEventListener('click', () => { if (confirm('Clear all RSVPs?')) { localStorage.removeItem('rsvp'); renderRsvps(); toast('Cleared'); } });
+  el.querySelector('#clearRsvp').addEventListener('click', async () => {
+    if (!confirm('Clear all RSVPs?')) return;
+    if (apiAuthed && apiCsrf) {
+      try {
+        const sess = await apiSession();
+        apiCsrf = sess.csrf || apiCsrf;
+        await fetch('api/rsvp.php?all=1', { method: 'DELETE', headers: { 'X-CSRF-Token': apiCsrf || '' }, credentials: 'same-origin' });
+      } catch (e) {}
+    } else {
+      localStorage.removeItem('rsvp');
+    }
+    renderRsvps(); toast('Cleared');
+  });
   el.querySelector('#exportRsvp').addEventListener('click', () => {
-    const csv = ['Name,Email,Phone,Attend,Guests,Diet,Message,Date'].concat(list.map(r => `"${r.first || ''} ${r.last || ''}","${r.email || ''}","${r.phone || ''}","${r.attend || ''}","${r.guests || ''}","${r.diet || ''}","${(r.msg || '').replace(/"/g, '""')}","${new Date(r.ts).toLocaleString()}"`)).join('\n');
+    const csv = ['Name,Email,Phone,Attend,Guests,Diet,Message,Date'].concat(list.map(r => `"${(r.first||r.name||'') + ' ' + (r.last||'')}","${r.email||''}","${r.phone||''}","${r.attend||r.attending||''}","${r.guests||''}","${r.diet||''}","${((r.msg||r.message||'')).replace(/"/g,'""')}","${r.ts?new Date(r.ts).toLocaleString():(r.created_at||'')}"`)).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'rsvps.csv'; a.click();
@@ -341,25 +421,52 @@ function renderRsvps() {
 }
 
 // Guestbook
-function renderGuestbook() {
-  const list = JSON.parse(localStorage.getItem('gb') || '[]');
+async function renderGuestbook() {
+  let list = JSON.parse(localStorage.getItem('gb') || '[]');
+  if (apiAuthed) {
+    try {
+      const r = await fetch('api/guestbook.php', { credentials: 'same-origin' });
+      if (r.ok) { const j = await r.json(); if (j.ok && Array.isArray(j.guestbook)) list = j.guestbook; }
+    } catch (e) {}
+  }
   const el = document.getElementById('panel-guestbook');
   if (!list.length) { el.innerHTML = '<h2>Guestbook</h2><p class="muted">No messages yet.</p>'; return; }
   el.innerHTML = `<h2>Guestbook</h2><div class="list-editor"></div><button class="btn-sm btn-outline" id="clearGb" style="margin-top:12px">Clear all messages</button>`;
   const listEl = el.querySelector('.list-editor');
   list.forEach((m, idx) => {
     const div = document.createElement('div'); div.className = 'list-item';
-    div.innerHTML = `<div style="font-family:var(--font-display);color:var(--burgundy);font-size:20px">${escapeHtml(m.name)}</div><div>${escapeHtml(m.note)}</div><div class="muted" style="font-size:11px">${new Date(m.ts).toLocaleString()}</div><button class="remove" data-idx="${idx}">&times;</button>`;
+    div.innerHTML = `<div style="font-family:var(--font-display);color:var(--burgundy);font-size:20px">${escapeHtml(m.name)}</div><div>${escapeHtml(m.note || m.message || '')}</div><div class="muted" style="font-size:11px">${m.ts ? new Date(m.ts).toLocaleString() : (m.created_at || '')}</div><button class="remove" data-idx="${m.id || idx}">&times;</button>`;
     listEl.appendChild(div);
   });
-  listEl.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => {
-    const arr = JSON.parse(localStorage.getItem('gb') || '[]');
-    arr.splice(+e.target.dataset.idx, 1);
-    localStorage.setItem('gb', JSON.stringify(arr));
+  listEl.querySelectorAll('.remove').forEach(b => b.addEventListener('click', async e => {
+    const key = e.target.dataset.idx;
+    if (apiAuthed && apiCsrf && !String(key).startsWith('local')) {
+      try {
+        const sess = await apiSession();
+        apiCsrf = sess.csrf || apiCsrf;
+        await fetch('api/guestbook.php?id=' + encodeURIComponent(key), { method: 'DELETE', headers: { 'X-CSRF-Token': apiCsrf || '' }, credentials: 'same-origin' });
+      } catch (e) {}
+    } else {
+      const arr = JSON.parse(localStorage.getItem('gb') || '[]');
+      arr.splice(+key, 1);
+      localStorage.setItem('gb', JSON.stringify(arr));
+    }
     renderGuestbook();
     toast('Removed');
   }));
-  el.querySelector('#clearGb').addEventListener('click', () => { if (confirm('Clear all messages?')) { localStorage.removeItem('gb'); renderGuestbook(); toast('Cleared'); } });
+  el.querySelector('#clearGb').addEventListener('click', async () => {
+    if (!confirm('Clear all messages?')) return;
+    if (apiAuthed && apiCsrf) {
+      try {
+        const sess = await apiSession();
+        apiCsrf = sess.csrf || apiCsrf;
+        await fetch('api/guestbook.php?all=1', { method: 'DELETE', headers: { 'X-CSRF-Token': apiCsrf || '' }, credentials: 'same-origin' });
+      } catch (e) {}
+    } else {
+      localStorage.removeItem('gb');
+    }
+    renderGuestbook(); toast('Cleared');
+  });
 }
 
 // Publish
@@ -620,17 +727,35 @@ async function publishToGitHub() {
 
 document.getElementById('saveBtn').addEventListener('click', async () => {
   gather();
-  const ok = WC.saveContent(state);
-  if (!ok) { alert('Save failed: storage quota exceeded. Remove large uploaded images/audio or publish to GitHub.'); return; }
-  toast('Saved');
+  let saved = false;
+  if (apiAuthed && apiCsrf) {
+    try {
+      const sess = await apiSession();
+      apiCsrf = sess.csrf || apiCsrf;
+      const r = await fetch('api/content.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+        credentials: 'same-origin',
+        body: JSON.stringify(state)
+      });
+      const j = await r.json();
+      if (r.ok && j.ok) { saved = true; toast('Saved to API'); }
+      else { console.warn('API save failed', j); }
+    } catch (e) { console.warn(e); }
+  }
+  if (!saved) {
+    const ok = WC.saveContent(state);
+    if (!ok) { alert('Save failed: storage quota exceeded. Remove large uploaded images/audio or publish to GitHub.'); return; }
+    toast('Saved locally');
+  }
   renderDashboard();
-  // auto-publish if GitHub token configured
+  // auto-publish if GitHub token configured (legacy)
   const s = JSON.parse(localStorage.getItem('ghSettings') || '{}');
-  if (s.token) {
+  if (s.token && !saved) {
     const pub = await publishToGitHub();
     if (pub) toast('Published to GitHub');
     else alert('Saved locally, but publishing failed:\n\n' + lastPublishError);
-  } else {
+  } else if (!saved && !s.token) {
     alert('Saved to this browser only — visitors still see the old site.\n\nTo make changes live: open the Publish tab, paste a GitHub token, then click "Publish content.json".');
   }
 });
