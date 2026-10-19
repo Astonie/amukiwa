@@ -1,0 +1,3 @@
+.DS_Store
+wedding/data/*.sqlite*
+wedding/uploads/
