@@ -28,19 +28,19 @@
     "hashtag": "#AstonieAndWanangwa"
   },
   "media": {
-    "heroImage": "assets/uploads/hero-1.jpg",
-    "coverImage": "https://picsum.photos/seed/aw4/600/600",
-    "musicUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "heroImage": "",
+    "coverImage": "",
+    "musicUrl": "",
     "playlist": [
       {
-        "title": "Love Song",
-        "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+        "title": "love portion",
+        "url": "https://on.soundcloud.com/lz9anELZ4fsHd6reNi"
       }
     ]
   },
   "invitation": {
     "eyebrow": "You are cordially invited",
-    "title": "to the Intimate wedding of",
+    "title": "to the wedding of",
     "message": "Together with our families, we invite you to share in our joy as we unite in marriage.",
     "rsvpText": "RSVP Now"
   },
@@ -68,54 +68,48 @@
   ],
   "details": [
     {
-      "title": "Lunchon",
-      "time": "1:00 PM",
+      "title": "Ceremony",
+      "time": "2:00 PM",
       "place": "Golden Peacock Hotel",
       "address": "Blantyre, Malawi",
       "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
     },
     {
-      "title": "Reception - Mzimba Hall",
-      "time": "2:00 PM - 4:30 PM",
+      "title": "Reception",
+      "time": "5:00 PM",
       "place": "Golden Peacock Hotel",
       "address": "Blantyre, Malawi",
       "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
     }
   ],
   "gallery": [
-    "assets/uploads/gallery-1.jpg",
-    "assets/uploads/gallery-2.jpg",
-    "assets/uploads/gallery-3.jpg",
     "https://picsum.photos/seed/aw1/600/600",
     "https://picsum.photos/seed/aw2/600/600",
-    "https://picsum.photos/seed/aw3/600/600",
     "https://picsum.photos/seed/aw4/600/600",
-    "https://picsum.photos/seed/aw5/600/600",
-    "https://picsum.photos/seed/aw6/600/600",
-    "https://picsum.photos/seed/aw7/600/600"
+    "https://picsum.photos/seed/aw5/600/600"
   ],
   "party": [
     {
-      "initial": "P",
-      "name": "Promise Mphoola",
+      "initial": "J",
+      "name": "James Banda",
       "role": "Best Man",
-      "note": "Friend to the Groom"
+      "note": "Brother of the groom"
     },
     {
-      "initial": "P",
-      "name": "Prisca",
+      "initial": "M",
+      "name": "Mercy Phiri",
       "role": "Maid of Honor",
       "note": "Best friend of the bride"
     },
     {
-      "initial": "P",
-      "name": "Prince Kennedy",
+      "initial": "D",
+      "name": "Daniel Chirwa",
       "role": "Groomsman",
       "note": "Childhood friend"
     },
     {
-      "initial": "D",
-      "name": "Deborah ",
+      "initial": "G",
+      "name": "Grace Mwale",
       "role": "Bridesmaid",
       "note": "Sister of the bride"
     }
