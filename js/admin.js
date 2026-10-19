@@ -173,8 +173,8 @@ function renderMedia() {
     <div class="media-grid" id="mediaGrid"></div>
 
     <h3 style="margin:24px 0 10px;font-size:20px;color:var(--burgundy)">Music Playlist</h3>
-    <div class="field"><label>Upload audio (mp3)</label><input type="file" id="m_audio" accept="audio/*" multiple></div>
-    <div class="field"><label>Add track URL</label><div style="display:flex;gap:8px"><input id="m_trackUrl" placeholder="https://...mp3"><input id="m_trackTitle" placeholder="Track title" style="max-width:200px"><button class="btn-sm" id="addTrackBtn" type="button">Add</button></div></div>
+    <div class="field"><label>Add track by URL</label><div style="display:flex;gap:8px"><input id="m_trackUrl" placeholder="https://...mp3  or SoundCloud/YouTube link"><input id="m_trackTitle" placeholder="Track title" style="max-width:200px"><button class="btn-sm" id="addTrackBtn" type="button">Add</button></div></div>
+    <p class="muted" style="font-size:12px">Accepts direct .mp3 links, or SoundCloud/YouTube links (played as an embedded player).</p>
     <div class="list-editor" id="playlistList"></div>`;
   const grid = el.querySelector('#mediaGrid');
   state.gallery.forEach((u, idx) => {
@@ -227,9 +227,9 @@ function renderMedia() {
     renderMedia();
     toast('Track added');
   });
-  el.querySelector('#m_audio').addEventListener('change', e => {
+  el.querySelector('#m_audio')?.addEventListener('change', e => {
     e.target.value = '';
-    alert('Audio cannot be embedded in content.json (it would exceed GitHub\'s size limit).\n\nAdd the track by URL instead: paste a direct link to an .mp3 file (e.g. SoundCloud/Pixabay download link, or a file hosted on your server).');
+    alert('Audio files cannot be embedded (size limit). Paste a direct .mp3 URL, or a SoundCloud/YouTube link.');
   });
   pl.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => {
     state.media.playlist.splice(+e.target.dataset.idx, 1);

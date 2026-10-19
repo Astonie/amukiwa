@@ -71,7 +71,7 @@ if (C.media?.heroImage) {
   document.querySelector('.hero').style.backgroundSize = 'cover';
   document.querySelector('.hero').style.backgroundPosition = 'center';
 }
-if (C.media?.musicUrl) document.getElementById('bgMusic').src = C.media.musicUrl;
+if (C.media?.musicUrl && !/soundcloud\.com|youtube\.com|youtu\.be/i.test(C.media.musicUrl)) document.getElementById('bgMusic').src = C.media.musicUrl;
 
 // Countdown
 function updateCountdown() {
@@ -200,24 +200,56 @@ const nextBtn = document.getElementById('nextBtn');
 const volume = document.getElementById('volume');
 const trackTitle = document.getElementById('trackTitle');
 const playlistEl = document.getElementById('playlist');
+const embedHolder = document.getElementById('embedHolder');
+
+function embedSrcFor(url) {
+  if (!url) return null;
+  const u = String(url).trim();
+  if (/soundcloud\.com/i.test(u)) {
+    return `https://w.soundcloud.com/player/?url=${encodeURIComponent(u)}&color=%236b2737&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=true`;
+  }
+  const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0`;
+  return null;
+}
 
 const playlist = (C.media && Array.isArray(C.media.playlist) && C.media.playlist.length) ? C.media.playlist : (C.media?.musicUrl ? [{ title: 'Track 1', url: C.media.musicUrl }] : []);
 let current = 0;
 let playing = false;
+let currentEmbed = null;
 
 function loadTrack(i) {
   if (!playlist.length) { trackTitle.textContent = 'No tracks'; return; }
   current = (i + playlist.length) % playlist.length;
-  music.src = playlist[current].url;
+  const url = playlist[current].url;
   trackTitle.textContent = playlist[current].title || `Track ${current + 1}`;
+  currentEmbed = embedSrcFor(url);
+  if (currentEmbed) {
+    music.pause();
+    music.removeAttribute('src');
+    embedHolder.classList.remove('hidden');
+    embedHolder.innerHTML = `<iframe src="${currentEmbed}" allow="autoplay" scrolling="no" frameborder="0"></iframe>`;
+    volume.style.display = 'none';
+    playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫';
+  } else {
+    embedHolder.innerHTML = '';
+    embedHolder.classList.add('hidden');
+    volume.style.display = '';
+    music.src = url;
+  }
   renderPlaylist();
 }
 function renderPlaylist() {
   playlistEl.innerHTML = playlist.map((t, i) => `<div class="track ${i === current ? 'active' : ''}" data-idx="${i}"><span>${escapeHtml(t.title || 'Track ' + (i + 1))}</span></div>`).join('');
-  playlistEl.querySelectorAll('.track').forEach(el => el.addEventListener('click', () => { loadTrack(+el.dataset.idx); music.play().then(() => { playing = true; playBtn.textContent = '⏸'; }).catch(() => {}); }));
+  playlistEl.querySelectorAll('.track').forEach(el => el.addEventListener('click', () => { loadTrack(+el.dataset.idx); if (!currentEmbed) music.play().then(() => { playing = true; playBtn.textContent = '⏸'; }).catch(() => {}); }));
 }
 function togglePlay() {
   if (!playlist.length) return;
+  if (currentEmbed) {
+    if (playing) { embedHolder.innerHTML = ''; playing = false; playBtn.textContent = '▶'; musicBtn.textContent = '♪'; }
+    else { embedHolder.innerHTML = `<iframe src="${currentEmbed}" allow="autoplay" scrolling="no" frameborder="0"></iframe>`; playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫'; }
+    return;
+  }
   if (playing) { music.pause(); playing = false; playBtn.textContent = '▶'; musicBtn.textContent = '♪'; }
   else { music.play().then(() => { playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫'; }).catch(() => {}); }
 }
@@ -225,15 +257,15 @@ musicBtn.addEventListener('click', togglePlay);
 const playlistBtn = document.getElementById('playlistBtn');
 if (playlistBtn) playlistBtn.addEventListener('click', () => musicPlayer.classList.toggle('open'));
 playBtn.addEventListener('click', togglePlay);
-prevBtn.addEventListener('click', () => { loadTrack(current - 1); if (playing) music.play().catch(() => {}); });
-nextBtn.addEventListener('click', () => { loadTrack(current + 1); if (playing) music.play().catch(() => {}); });
+prevBtn.addEventListener('click', () => { loadTrack(current - 1); if (playing && !currentEmbed) music.play().catch(() => {}); });
+nextBtn.addEventListener('click', () => { loadTrack(current + 1); if (playing && !currentEmbed) music.play().catch(() => {}); });
 volume.addEventListener('input', () => { music.volume = +volume.value; });
 music.volume = +volume.value;
-music.addEventListener('ended', () => { loadTrack(current + 1); music.play().then(() => { playing = true; playBtn.textContent = '⏸'; }).catch(() => {}); });
+music.addEventListener('ended', () => { loadTrack(current + 1); if (!currentEmbed) music.play().then(() => { playing = true; playBtn.textContent = '⏸'; }).catch(() => {}); });
 loadTrack(0);
 renderPlaylist();
 // attempt autoplay (may be blocked by browser until interaction)
-music.play().then(() => { playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫'; }).catch(() => {});
+if (!currentEmbed) music.play().then(() => { playing = true; playBtn.textContent = '⏸'; musicBtn.textContent = '♫'; }).catch(() => {});
 
 window.launchConfetti = launchConfetti;
 }

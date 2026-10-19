@@ -237,6 +237,9 @@ footer .links a:hover{opacity:1}
 .music-panel{position:absolute;bottom:62px;right:0;width:260px;background:var(--card);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:14px;display:none;border:1px solid var(--champagne)}
 .music-player.open .music-panel{display:block}
 .track-title{font-family:var(--font-display);font-size:16px;color:var(--burgundy);margin-bottom:10px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.embed-holder{width:100%;border-radius:10px;overflow:hidden;margin-bottom:10px;background:var(--cream)}
+.embed-holder iframe{width:100%;height:166px;border:0;display:block}
+.embed-holder.hidden{display:none}
 .music-controls{display:flex;justify-content:center;gap:12px;margin-bottom:10px}
 .music-controls button{width:36px;height:36px;border-radius:50%;background:var(--ivory);color:var(--burgundy);font-size:14px;border:1px solid var(--champagne)}
 .music-controls button:hover{background:var(--burgundy);color:#fff}
