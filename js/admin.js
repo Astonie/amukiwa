@@ -551,6 +551,19 @@ function gather() {
 // Save
 let lastPublishError = '';
 
+async function fetchFileSha(api, branch, token) {
+  const res = await fetch(`${api}?ref=${branch}&_=${Date.now()}`, {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache' }
+  });
+  if (res.ok) return (await res.json()).sha;
+  if (res.status === 404) return null;
+  const e = await res.json().catch(() => ({}));
+  const err = new Error(e.message || res.statusText);
+  err.status = res.status;
+  throw err;
+}
+
 async function publishToGitHub() {
   lastPublishError = '';
   const s = JSON.parse(localStorage.getItem('ghSettings') || '{}');
@@ -563,37 +576,46 @@ async function publishToGitHub() {
   }
   const content = btoa(unescape(encodeURIComponent(json)));
   const api = `https://api.github.com/repos/${s.repo}/contents/${s.path || 'content.json'}`;
-  try {
-    let sha = null;
-    const getRes = await fetch(`${api}?ref=${s.branch || 'main'}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
-    if (!getRes.ok) {
-      if (getRes.status !== 404) {
-        const e = await getRes.json().catch(() => ({}));
-        throw new Error(e.message || getRes.statusText);
-      }
-    } else {
-      const data = await getRes.json();
-      sha = data.sha;
-    }
-    const body = { message: 'Update content.json via admin', content, branch: s.branch || 'main' };
-    if (sha) body.sha = sha;
-    const putRes = await fetch(api, { method: 'PUT', headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (!putRes.ok) {
+  const branch = s.branch || 'main';
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const sha = await fetchFileSha(api, branch, s.token);
+      const body = { message: `Update ${s.path || 'content.json'} via admin`, content, branch };
+      if (sha) body.sha = sha;
+      const putRes = await fetch(api, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (putRes.ok) return true;
+
       const err = await putRes.json().catch(() => ({}));
       const msg = err.message || putRes.statusText;
-      if (putRes.status === 403 && /not accessible/i.test(msg)) {
-        lastPublishError = 'Token can READ but cannot WRITE.\n\nEasiest fix — create a new CLASSIC token:\nGitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).\nScope: tick "repo" only. Generate, copy it (starts ghp_), paste here.\n\nIf using a FINE-GRAINED token instead:\n• Repository access must be "Only select repositories" → add Astonie/amukiwa.\n  (NOT "Public repositories (read-only)" — that can never write.)\n• Permissions → Contents → Read and write.\n• Press "Update token permissions" to save.\n• If your org requires SSO, click "Authorize SSO" next to the token.\n\nThen paste the new token and publish again.';
-      } else {
-        lastPublishError = `GitHub error (${putRes.status}): ${msg}`;
+
+      if (putRes.status === 409) {
+        // file changed under us or stale sha — refresh and retry
+        if (attempt < 3) { await new Promise(r => setTimeout(r, 500 * attempt)); continue; }
+        lastPublishError = 'content.json changed on GitHub while you were editing (409 conflict).\n\nYour edits are still saved in this browser. Click Publish again — it will overwrite the newer version with yours.';
+        return false;
       }
-      throw new Error(lastPublishError);
+      if (putRes.status === 403 && /not accessible/i.test(msg)) {
+        lastPublishError = 'Token can READ but cannot WRITE.\n\nEasiest fix — create a new CLASSIC token:\nGitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).\nScope: tick "repo" only. Generate, copy it (starts ghp_), paste here.\n\nIf using a FINE-GRAINED token instead:\n• Repository access must be "Only select repositories" → add Astonie/amukiwa.\n  (NOT "Public repositories (read-only)" — that can never write.)\n• Permissions → Contents → Read and write.\n• Press "Update token permissions" to save.\n\nThen paste the new token and publish again.';
+        return false;
+      }
+      if (putRes.status === 401) {
+        lastPublishError = 'Token was rejected (401). It may have expired — generate a new one and paste it in the Publish tab.';
+        return false;
+      }
+      lastPublishError = `GitHub error (${putRes.status}): ${msg}`;
+      return false;
+    } catch (e) {
+      console.error(e);
+      if (attempt >= 3) { lastPublishError = e.message; return false; }
+      await new Promise(r => setTimeout(r, 500 * attempt));
     }
-    return true;
-  } catch (e) {
-    console.error(e);
-    if (!lastPublishError) lastPublishError = e.message;
-    return false;
   }
+  return false;
 }
 
 document.getElementById('saveBtn').addEventListener('click', async () => {
