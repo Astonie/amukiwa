@@ -79,8 +79,8 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     adminApp.style.display = 'block';
     initAdmin();
   } else {
-    const stored = localStorage.getItem('adminPassword') || 'admin';
-    if (pass === stored) {
+    const stored = localStorage.getItem('adminPassword');
+    if (stored && pass === stored) {
       sessionStorage.setItem('adminAuth', '1');
       sessionStorage.setItem('adminPreview', '1');
       loginScreen.style.display = 'none';
@@ -544,11 +544,12 @@ function renderPublish() {
 
 // Settings
 function renderSettings() {
-  const pass = localStorage.getItem('adminPassword') || 'admin';
+  const pass = localStorage.getItem('adminPassword');
   document.getElementById('panel-settings').innerHTML = `
     <h2>Settings</h2>
-    <div class="field"><label>Admin password</label><input id="set_pass" type="text" value="${escapeAttr(pass)}"></div>
-    <button class="btn-sm" id="savePass">Save Password</button>
+    <div class="field"><label>Admin password (stored in this browser only)</label><input id="set_pass" type="password" value="${escapeAttr(pass || '')}" placeholder="Leave blank to keep using API password"></div>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">To change the server password, use the API-based change or update installer defaults. This local override is optional.</p>
+    <button class="btn-sm" id="savePass">Save local password override</button>
     <div style="margin-top:16px">
       <button class="btn-sm btn-outline" id="exportC">Export content.json</button>
       <button class="btn-sm btn-outline" id="importC">Import content.json</button>
@@ -579,8 +580,10 @@ function renderSettings() {
     }).catch(() => alert('Invalid JSON file'));
   });
   document.getElementById('savePass').addEventListener('click', () => {
-    localStorage.setItem('adminPassword', document.getElementById('set_pass').value);
-    toast('Password saved');
+    const v = document.getElementById('set_pass').value.trim();
+    if (v) localStorage.setItem('adminPassword', v);
+    else localStorage.removeItem('adminPassword');
+    toast('Local password saved');
   });
   document.getElementById('clearPreview').addEventListener('click', () => {
     localStorage.removeItem('weddingContent');
