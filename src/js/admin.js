@@ -1,0 +1,828 @@
+import { initMonitoring } from '../lib/monitoring.js';
+initMonitoring('admin');
+const WC = window.WeddingContent;
+if (!localStorage.getItem('adminPassword')) localStorage.setItem('adminPassword', 'admin');
+let state = WC.getContent();
+
+const tabs = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'site', label: 'Site Text' },
+  { id: 'couple', label: 'Couple' },
+  { id: 'invitation', label: 'Invitation' },
+  { id: 'media', label: 'Media & Gallery' },
+  { id: 'story', label: 'Story' },
+  { id: 'details', label: 'Details' },
+  { id: 'party', label: 'Party' },
+  { id: 'faq', label: 'FAQ' },
+  { id: 'rsvps', label: 'RSVPs' },
+  { id: 'guestbook', label: 'Guestbook' },
+  { id: 'publish', label: 'Publish' },
+  { id: 'settings', label: 'Settings' },
+];
+
+// Password gate
+const loginScreen = document.getElementById('loginScreen');
+const adminApp = document.getElementById('adminApp');
+let apiAuthed = false;
+let apiUsername = null;
+let apiCsrf = null;
+
+async function apiSession() {
+  try {
+    const r = await fetch('api/session.php', { cache: 'no-store', credentials: 'same-origin' });
+    if (!r.ok) return { authed: false };
+    const j = await r.json();
+    return j;
+  } catch (e) { return { authed: false }; }
+}
+async function apiLogin(username, password) {
+  try {
+    const r = await fetch('api/login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ username, password })
+    });
+    const j = await r.json();
+    return j;
+  } catch (e) { return { error: 'Network error' }; }
+}
+async function apiLogout() {
+  try { await fetch('api/logout.php', { method: 'POST', credentials: 'same-origin' }); } catch (e) {}
+}
+
+
+async function loadStateFromApi() {
+  try {
+    const r = await fetch('api/content.php', { cache: 'no-store', credentials: 'same-origin' });
+    if (r.ok) {
+      const j = await r.json();
+      if (j && !j.error) {
+        state = WC.mergeDefaults ? WC.mergeDefaults(j) : Object.assign({}, j);
+        WC.saveContent(state);
+      }
+    }
+  } catch (e) { /* keep local */ }
+}
+
+async function checkAuth() {
+  const sess = await apiSession();
+  if (sess.authed) {
+    apiAuthed = true; apiUsername = sess.username || 'admin'; apiCsrf = sess.csrf || null;
+    sessionStorage.setItem('adminAuth', '1');
+    sessionStorage.setItem('adminPreview', '1');
+    loginScreen.style.display = 'none';
+    adminApp.style.display = 'block';
+    await loadStateFromApi();
+    initAdmin();
+  }
+  if (sessionStorage.getItem('adminAuth') === '1') {
+    sessionStorage.setItem('adminPreview', '1');
+    loginScreen.style.display = 'none';
+    adminApp.style.display = 'block';
+    await loadStateFromApi();
+    initAdmin();
+  }
+}
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const pass = document.getElementById('loginPass').value;
+  const user = 'admin';
+  const res = await apiLogin(user, pass);
+  if (res && res.ok) {
+    const sess = await apiSession();
+    apiAuthed = true; apiUsername = sess.username || res.username || user; apiCsrf = sess.csrf || res.csrf || null;
+    sessionStorage.setItem('adminAuth', '1');
+    sessionStorage.setItem('adminPreview', '1');
+    loginScreen.style.display = 'none';
+    adminApp.style.display = 'block';
+    await loadStateFromApi();
+    initAdmin();
+  } else {
+    const stored = localStorage.getItem('adminPassword');
+    if (stored && pass === stored) {
+      sessionStorage.setItem('adminAuth', '1');
+      sessionStorage.setItem('adminPreview', '1');
+      loginScreen.style.display = 'none';
+      adminApp.style.display = 'block';
+      await loadStateFromApi();
+      initAdmin();
+    } else {
+      alert(res && res.error ? res.error : 'Wrong password');
+    }
+  }
+});
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await apiLogout();
+  apiAuthed = false; apiUsername = null; apiCsrf = null;
+  sessionStorage.removeItem('adminAuth');
+  location.reload();
+});
+
+function initAdmin() {
+  const sideNav = document.getElementById('sideNav');
+  const panelsEl = document.getElementById('panels');
+  tabs.forEach(t => {
+    const b = document.createElement('div'); b.className = 'nav-item'; b.textContent = t.label; b.dataset.tab = t.id;
+    b.addEventListener('click', () => activate(t.id));
+    sideNav.appendChild(b);
+    const p = document.createElement('div'); p.className = 'panel'; p.id = 'panel-' + t.id;
+    panelsEl.appendChild(p);
+  });
+  activate('dashboard');
+  renderAll();
+}
+
+function activate(id) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+  const t = tabs.find(x => x.id === id);
+  document.getElementById('panelTitle').textContent = t ? t.label : '';
+}
+
+function escapeAttr(s) { return String(s ?? '').replace(/"/g, '&quot;'); }
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1800); }
+
+function renderAll() {
+  renderDashboard();
+  renderSite();
+  renderCouple();
+  renderInvitation();
+  renderMedia();
+  renderStory();
+  renderDetails();
+  renderParty();
+  renderFaq();
+  renderRsvps();
+  renderGuestbook();
+  renderPublish();
+  renderSettings();
+}
+
+// Dashboard
+async function renderDashboard() {
+  let rsvps = JSON.parse(localStorage.getItem('rsvp') || '[]');
+  let gb = JSON.parse(localStorage.getItem('gb') || '[]');
+  if (apiAuthed) {
+    try {
+      const [rs, gs] = await Promise.all([
+        fetch('api/rsvp.php', { credentials: 'same-origin' }),
+        fetch('api/guestbook.php', { credentials: 'same-origin' })
+      ]);
+      if (rs.ok) { const j = await rs.json(); if (j.ok && Array.isArray(j.rsvp)) rsvps = j.rsvp; }
+      if (gs.ok) { const j = await gs.json(); if (j.ok && Array.isArray(j.guestbook)) gb = j.guestbook; }
+    } catch (e) {}
+  }
+  document.getElementById('panel-dashboard').innerHTML = `
+    <h2>Dashboard</h2>
+    <div class="row">
+      <div class="field"><label>Wedding date</label><input value="${escapeAttr(state.couple.dateDisplay)}" readonly></div>
+      <div class="field"><label>Venue</label><input value="${escapeAttr(state.couple.venue)}" readonly></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Total RSVPs</label><input value="${rsvps.length}" readonly></div>
+      <div class="field"><label>Guestbook messages</label><input value="${gb.length}" readonly></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Gallery images</label><input value="${state.gallery.length}" readonly></div>
+      <div class="field"><label>Wedding party members</label><input value="${state.party.length}" readonly></div>
+    </div>
+    <p class="muted" style="margin-top:14px;font-size:13px">Use the sidebar to edit content. Save changes, then Publish to make them live for all visitors.</p>`;
+}
+
+// Site text
+function renderSite() {
+  const s = state.site || {};
+  const fields = [
+    ['eyebrow', 'Hero eyebrow'], ['storyTitle', 'Story title'], ['storySub', 'Story subtitle'],
+    ['detailsTitle', 'Details title'], ['detailsSub', 'Details subtitle'],
+    ['galleryTitle', 'Gallery title'], ['gallerySub', 'Gallery subtitle'],
+    ['partyTitle', 'Party title'], ['partySub', 'Party subtitle'],
+    ['rsvpTitle', 'RSVP title'], ['rsvpSub', 'RSVP subtitle'],
+    ['faqTitle', 'FAQ title'], ['faqSub', 'FAQ subtitle'],
+    ['guestbookTitle', 'Guestbook title'], ['guestbookSub', 'Guestbook subtitle'],
+    ['footerMessage', 'Footer message'],
+  ];
+  document.getElementById('panel-site').innerHTML = `<h2>Site Text</h2>` + fields.map(([k, l]) =>
+    `<div class="field"><label>${l}</label><input id="site_${k}" value="${escapeAttr(s[k] || '')}"></div>`).join('');
+}
+
+// Couple
+function renderCouple() {
+  const c = state.couple;
+  document.getElementById('panel-couple').innerHTML = `
+    <h2>Couple Details</h2>
+    <div class="row"><div class="field"><label>Groom</label><input id="c_groom" value="${escapeAttr(c.groom)}"></div><div class="field"><label>Bride</label><input id="c_bride" value="${escapeAttr(c.bride)}"></div></div>
+    <div class="row"><div class="field"><label>Date (ISO)</label><input id="c_dateISO" value="${escapeAttr(c.dateISO)}" placeholder="2026-12-06T14:00:00"></div><div class="field"><label>Date display</label><input id="c_dateDisplay" value="${escapeAttr(c.dateDisplay)}"></div></div>
+    <div class="row"><div class="field"><label>Location</label><input id="c_location" value="${escapeAttr(c.location)}"></div><div class="field"><label>Venue</label><input id="c_venue" value="${escapeAttr(c.venue)}"></div></div>
+    <div class="row"><div class="field"><label>RSVP deadline</label><input id="c_rsvpDeadline" value="${escapeAttr(c.rsvpDeadline)}"></div><div class="field"><label>Hashtag</label><input id="c_hashtag" value="${escapeAttr(c.hashtag)}"></div></div>
+    <div class="field"><label>Generate invitation link for a guest</label><div style="display:flex;gap:8px"><input id="invGuest" placeholder="Guest name"><button class="btn-sm" id="genInv" type="button">Generate</button></div><div id="invResult" style="margin-top:8px;font-size:13px;word-break:break-all"></div></div>`;
+  document.getElementById('genInv').addEventListener('click', () => {
+    const name = document.getElementById('invGuest').value.trim();
+    const url = `${location.origin}/invitation?to=${encodeURIComponent(name)}`;
+    const res = document.getElementById('invResult');
+    res.innerHTML = name ? `<a href="${url}" target="_blank">${url}</a> <button class="btn-sm btn-outline" id="copyInv">Copy</button>` : 'Enter a guest name';
+    const cb = document.getElementById('copyInv');
+    if (cb) cb.addEventListener('click', () => { navigator.clipboard.writeText(url); toast('Copied'); });
+  });
+}
+
+// Invitation
+function renderInvitation() {
+  const inv = state.invitation || {};
+  document.getElementById('panel-invitation').innerHTML = `
+    <h2>Invitation Page</h2>
+    <div class="field"><label>Eyebrow</label><input id="inv_eyebrow" value="${escapeAttr(inv.eyebrow || 'You are cordially invited')}"></div>
+    <div class="field"><label>Title line</label><input id="inv_title" value="${escapeAttr(inv.title || 'to the wedding of')}"></div>
+    <div class="field"><label>Message</label><textarea id="inv_message" rows="3">${escapeHtml(inv.message || 'Together with our families, we invite you to share in our joy as we unite in marriage.')}</textarea></div>
+    <div class="field"><label>RSVP button text</label><input id="inv_rsvp" value="${escapeAttr(inv.rsvpText || 'RSVP Now')}"></div>`;
+}
+
+// Media
+function renderMedia() {
+  const m = state.media || {};
+  const el = document.getElementById('panel-media');
+  el.innerHTML = `
+    <h2>Media & Gallery</h2>
+    <div class="row">
+      <div class="field"><label>Hero background image URL</label><input id="m_hero" value="${escapeAttr(m.heroImage || '')}" placeholder="https://... or upload"></div>
+      <div class="field"><label>Cover image URL</label><input id="m_cover" value="${escapeAttr(m.coverImage || '')}" placeholder="https://..."></div>
+    </div>
+    <div class="field"><label>Background music URL</label><input id="m_music" value="${escapeAttr(m.musicUrl || '')}" placeholder="https://...mp3"></div>
+    <div class="field"><label>Upload images (optional, max 300 KB each)</label><input type="file" id="m_upload" accept="image/*" multiple></div>
+    <p class="muted" style="font-size:12px">Small uploads are embedded inline. For real photos, upload them to <code>assets/uploads/</code> on your host and paste the relative path (e.g. <code>assets/uploads/photo.jpg</code>) — this keeps content.json small enough to publish.</p>
+    <h3 style="margin:18px 0 10px;font-size:20px;color:var(--burgundy)">Media Library</h3>
+    <div class="media-grid" id="mediaGrid"></div>
+
+    <h3 style="margin:24px 0 10px;font-size:20px;color:var(--burgundy)">Music Playlist</h3>
+    <div class="field"><label>Add track by URL</label><div style="display:flex;gap:8px"><input id="m_trackUrl" placeholder="https://...mp3  or SoundCloud/YouTube link"><input id="m_trackTitle" placeholder="Track title" style="max-width:200px"><button class="btn-sm" id="addTrackBtn" type="button">Add</button></div></div>
+    <p class="muted" style="font-size:12px">Accepts direct .mp3 links, or SoundCloud/YouTube links (played as an embedded player).</p>
+    <div class="list-editor" id="playlistList"></div>`;
+  const grid = el.querySelector('#mediaGrid');
+  state.gallery.forEach((u, idx) => {
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    card.innerHTML = `<img src="${escapeAttr(u)}" onerror="this.style.opacity=.3">
+      <div class="actions">
+        <button data-act="hero" data-idx="${idx}">Hero</button>
+        <button data-act="cover" data-idx="${idx}">Cover</button>
+        <button data-act="del" data-idx="${idx}">✕</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll('button').forEach(b => b.addEventListener('click', e => {
+    const idx = +e.target.dataset.idx;
+    const act = e.target.dataset.act;
+    if (act === 'del') { state.gallery.splice(idx, 1); renderMedia(); toast('Removed'); }
+    else if (act === 'hero') { document.getElementById('m_hero').value = state.gallery[idx]; toast('Set as hero'); }
+    else if (act === 'cover') { document.getElementById('m_cover').value = state.gallery[idx]; toast('Set as cover'); }
+  }));
+  el.querySelector('#m_upload').addEventListener('change', e => {
+    [...e.target.files].forEach(file => {
+      if (file.size > 300 * 1024) {
+        alert(`"${file.name}" is ${Math.round(file.size / 1024)} KB. Inline images bloat content.json and break GitHub publishing (limit ~1 MB).\n\nUse a hosted image URL instead, or compress below 300 KB.`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => { state.gallery.unshift(ev.target.result); renderMedia(); toast('Image added'); };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  // Playlist
+  const pl = el.querySelector('#playlistList');
+  const playlist = state.media.playlist || [];
+  playlist.forEach((t, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<button class="remove" data-idx="${idx}">&times;</button>
+      <div class="row"><div class="field"><label>Title</label><input class="pl-title" value="${escapeAttr(t.title)}"></div><div class="field"><label>URL</label><input class="pl-url" value="${escapeAttr(t.url)}"></div></div>`;
+    pl.appendChild(div);
+  });
+  el.querySelector('#addTrackBtn').addEventListener('click', () => {
+    const url = document.getElementById('m_trackUrl').value.trim();
+    const title = document.getElementById('m_trackTitle').value.trim() || 'Track';
+    if (!url) return;
+    state.media.playlist = state.media.playlist || [];
+    state.media.playlist.push({ title, url });
+    document.getElementById('m_trackUrl').value = '';
+    document.getElementById('m_trackTitle').value = '';
+    renderMedia();
+    toast('Track added');
+  });
+  el.querySelector('#m_audio')?.addEventListener('change', e => {
+    e.target.value = '';
+    alert('Audio files cannot be embedded (size limit). Paste a direct .mp3 URL, or a SoundCloud/YouTube link.');
+  });
+  pl.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => {
+    state.media.playlist.splice(+e.target.dataset.idx, 1);
+    renderMedia();
+    toast('Removed');
+  }));
+}
+
+// Story
+function renderStory() {
+  const el = document.getElementById('panel-story');
+  el.innerHTML = `<h2>Our Story</h2><div class="list-editor" id="storyList"></div><button class="btn-sm" id="addStory">+ Add milestone</button>`;
+  const list = el.querySelector('#storyList');
+  state.story.forEach((s, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<button class="remove" data-idx="${idx}">&times;</button>
+      ${idx > 0 ? `<button class="move" data-idx="${idx}" data-dir="-1">↑</button>` : ''}
+      ${idx < state.story.length - 1 ? `<button class="move" data-idx="${idx}" data-dir="1">↓</button>` : ''}
+      <div class="row"><div class="field"><label>Year</label><input class="s-year" value="${escapeAttr(s.year)}"></div><div class="field"><label>Title</label><input class="s-title" value="${escapeAttr(s.title)}"></div></div>
+      <div class="field"><label>Text</label><textarea class="s-text" rows="2">${escapeHtml(s.text)}</textarea></div>`;
+    list.appendChild(div);
+  });
+  el.querySelector('#addStory').addEventListener('click', () => { state.story.push({ year: '2026', title: 'New milestone', text: 'Description' }); renderStory(); });
+  list.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.story.splice(+e.target.dataset.idx, 1); renderStory(); }));
+  list.querySelectorAll('.move').forEach(b => b.addEventListener('click', e => {
+    const i = +e.target.dataset.idx; const dir = +e.target.dataset.dir;
+    const arr = state.story; const ni = i + dir;
+    if (ni < 0 || ni >= arr.length) return;
+    [arr[i], arr[ni]] = [arr[ni], arr[i]]; renderStory();
+  }));
+}
+
+// Details
+function renderDetails() {
+  const el = document.getElementById('panel-details');
+  el.innerHTML = `<h2>Event Details</h2><div class="list-editor" id="detailsList"></div><button class="btn-sm" id="addDetail">+ Add event</button>`;
+  const list = el.querySelector('#detailsList');
+  state.details.forEach((d, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<button class="remove" data-idx="${idx}">&times;</button>
+      <div class="row"><div class="field"><label>Title</label><input class="d-title" value="${escapeAttr(d.title)}"></div><div class="field"><label>Time</label><input class="d-time" value="${escapeAttr(d.time)}"></div></div>
+      <div class="row"><div class="field"><label>Place</label><input class="d-place" value="${escapeAttr(d.place)}"></div><div class="field"><label>Address</label><input class="d-address" value="${escapeAttr(d.address)}"></div></div>
+      <div class="field"><label>Map URL</label><input class="d-map" value="${escapeAttr(d.mapUrl)}"></div>`;
+    list.appendChild(div);
+  });
+  el.querySelector('#addDetail').addEventListener('click', () => { state.details.push({ title: 'Event', time: '12:00 PM', place: 'Venue', address: 'City', mapUrl: '#' }); renderDetails(); });
+  list.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.details.splice(+e.target.dataset.idx, 1); renderDetails(); }));
+}
+
+// Party
+function renderParty() {
+  const el = document.getElementById('panel-party');
+  el.innerHTML = `<h2>Wedding Party</h2><div class="list-editor" id="partyList"></div><button class="btn-sm" id="addParty">+ Add member</button>`;
+  const list = el.querySelector('#partyList');
+  state.party.forEach((p, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<button class="remove" data-idx="${idx}">&times;</button>
+      <div class="row">
+        <div class="field"><label>Initial</label><input class="p-initial" value="${escapeAttr(p.initial)}"></div>
+        <div class="field"><label>Name</label><input class="p-name" value="${escapeAttr(p.name)}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Role</label><input class="p-role" value="${escapeAttr(p.role)}"></div>
+        <div class="field"><label>Note</label><input class="p-note" value="${escapeAttr(p.note)}"></div>
+      </div>`;
+    list.appendChild(div);
+  });
+  el.querySelector('#addParty').addEventListener('click', () => { state.party.push({ initial: 'X', name: 'Name', role: 'Role', note: 'Note' }); renderParty(); });
+  list.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.party.splice(+e.target.dataset.idx, 1); renderParty(); }));
+}
+
+// FAQ
+function renderFaq() {
+  const el = document.getElementById('panel-faq');
+  el.innerHTML = `<h2>FAQ</h2><div class="list-editor" id="faqList"></div><button class="btn-sm" id="addFaq">+ Add FAQ</button>`;
+  const list = el.querySelector('#faqList');
+  state.faq.forEach((f, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<button class="remove" data-idx="${idx}">&times;</button>
+      <div class="field"><label>Question</label><input class="f-q" value="${escapeAttr(f.q)}"></div>
+      <div class="field"><label>Answer</label><textarea class="f-a" rows="2">${escapeHtml(f.a)}</textarea></div>`;
+    list.appendChild(div);
+  });
+  el.querySelector('#addFaq').addEventListener('click', () => { state.faq.push({ q: 'Question?', a: 'Answer.' }); renderFaq(); });
+  list.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.faq.splice(+e.target.dataset.idx, 1); renderFaq(); }));
+}
+
+// RSVPs
+async function renderRsvps() {
+  let list = JSON.parse(localStorage.getItem('rsvp') || '[]');
+  if (apiAuthed) {
+    try {
+      const r = await fetch('api/rsvp.php', { credentials: 'same-origin' });
+      if (r.ok) { const j = await r.json(); if (j.ok && Array.isArray(j.rsvp)) list = j.rsvp; }
+    } catch (e) {}
+  }
+  const el = document.getElementById('panel-rsvps');
+  if (!list.length) { el.innerHTML = '<h2>RSVPs</h2><p class="muted">No RSVPs yet.</p>'; return; }
+  el.innerHTML = `<h2>RSVPs</h2><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Attend</th><th>Guests</th><th>Diet</th><th>Message</th><th>Date</th></tr></thead><tbody></tbody></table>
+    <div style="margin-top:12px"><button class="btn-sm btn-outline" id="clearRsvp">Clear all RSVPs</button> <button class="btn-sm btn-outline" id="exportRsvp">Export CSV</button></div>`;
+  const tbody = el.querySelector('tbody');
+  list.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(r.first || r.name || '')} ${escapeHtml(r.last || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.attend || r.attending || '')}</td><td>${escapeHtml(r.guests || '')}</td><td>${escapeHtml(r.diet || '')}</td><td>${escapeHtml(r.msg || r.message || '')}</td><td>${r.ts ? new Date(r.ts).toLocaleString() : (r.created_at || '')}</td>`;
+    tbody.appendChild(tr);
+  });
+  el.querySelector('#clearRsvp').addEventListener('click', async () => {
+    if (!confirm('Clear all RSVPs?')) return;
+    if (apiAuthed && apiCsrf) {
+      try {
+        const sess = await apiSession();
+        apiCsrf = sess.csrf || apiCsrf;
+        await fetch('api/rsvp.php?all=1', { method: 'DELETE', headers: { 'X-CSRF-Token': apiCsrf || '' }, credentials: 'same-origin' });
+      } catch (e) {}
+    } else {
+      localStorage.removeItem('rsvp');
+    }
+    renderRsvps(); toast('Cleared');
+  });
+  el.querySelector('#exportRsvp').addEventListener('click', () => {
+    const csv = ['Name,Email,Phone,Attend,Guests,Diet,Message,Date'].concat(list.map(r => `"${(r.first||r.name||'') + ' ' + (r.last||'')}","${r.email||''}","${r.phone||''}","${r.attend||r.attending||''}","${r.guests||''}","${r.diet||''}","${((r.msg||r.message||'')).replace(/"/g,'""')}","${r.ts?new Date(r.ts).toLocaleString():(r.created_at||'')}"`)).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'rsvps.csv'; a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+// Guestbook
+async function renderGuestbook() {
+  let list = JSON.parse(localStorage.getItem('gb') || '[]');
+  if (apiAuthed) {
+    try {
+      const r = await fetch('api/guestbook.php', { credentials: 'same-origin' });
+      if (r.ok) { const j = await r.json(); if (j.ok && Array.isArray(j.guestbook)) list = j.guestbook; }
+    } catch (e) {}
+  }
+  const el = document.getElementById('panel-guestbook');
+  if (!list.length) { el.innerHTML = '<h2>Guestbook</h2><p class="muted">No messages yet.</p>'; return; }
+  el.innerHTML = `<h2>Guestbook</h2><div class="list-editor"></div><button class="btn-sm btn-outline" id="clearGb" style="margin-top:12px">Clear all messages</button>`;
+  const listEl = el.querySelector('.list-editor');
+  list.forEach((m, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<div style="font-family:var(--font-display);color:var(--burgundy);font-size:20px">${escapeHtml(m.name)}</div><div>${escapeHtml(m.note || m.message || '')}</div><div class="muted" style="font-size:11px">${m.ts ? new Date(m.ts).toLocaleString() : (m.created_at || '')}</div><button class="remove" data-idx="${m.id || idx}">&times;</button>`;
+    listEl.appendChild(div);
+  });
+  listEl.querySelectorAll('.remove').forEach(b => b.addEventListener('click', async e => {
+    const key = e.target.dataset.idx;
+    if (apiAuthed && apiCsrf && !String(key).startsWith('local')) {
+      try {
+        const sess = await apiSession();
+        apiCsrf = sess.csrf || apiCsrf;
+        await fetch('api/guestbook.php?id=' + encodeURIComponent(key), { method: 'DELETE', headers: { 'X-CSRF-Token': apiCsrf || '' }, credentials: 'same-origin' });
+      } catch (e) {}
+    } else {
+      const arr = JSON.parse(localStorage.getItem('gb') || '[]');
+      arr.splice(+key, 1);
+      localStorage.setItem('gb', JSON.stringify(arr));
+    }
+    renderGuestbook();
+    toast('Removed');
+  }));
+  el.querySelector('#clearGb').addEventListener('click', async () => {
+    if (!confirm('Clear all messages?')) return;
+    if (apiAuthed && apiCsrf) {
+      try {
+        const sess = await apiSession();
+        apiCsrf = sess.csrf || apiCsrf;
+        await fetch('api/guestbook.php?all=1', { method: 'DELETE', headers: { 'X-CSRF-Token': apiCsrf || '' }, credentials: 'same-origin' });
+      } catch (e) {}
+    } else {
+      localStorage.removeItem('gb');
+    }
+    renderGuestbook(); toast('Cleared');
+  });
+}
+
+// Publish
+function renderPublish() {
+  const settings = JSON.parse(localStorage.getItem('ghSettings') || '{}');
+  document.getElementById('panel-publish').innerHTML = `
+    <h2>Publish to GitHub</h2>
+    <p class="muted" style="margin-bottom:14px">Publish your content to GitHub so all visitors see it. Requires a GitHub Personal Access Token with repo write access. Keep uploaded media small (or host externally) to avoid size limits.</p>
+    <div class="field"><label>GitHub Token (PAT)</label><input id="gh_token" type="password" value="${escapeAttr(settings.token || '')}" placeholder="ghp_..."></div>
+    <div class="row">
+      <div class="field"><label>Repository</label><input id="gh_repo" value="${escapeAttr(settings.repo || 'Astonie/amukiwa')}"></div>
+      <div class="field"><label>Branch</label><input id="gh_branch" value="${escapeAttr(settings.branch || 'main')}"></div>
+    </div>
+    <div class="field"><label>File path</label><input id="gh_path" value="${escapeAttr(settings.path || 'content.json')}"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      <button class="btn-sm btn-outline" id="saveGh">Save Settings</button>
+      <button class="btn-sm btn-outline" id="testGh">Test Connection</button>
+      <button class="btn-sm" id="publishBtn">Publish content.json</button>
+    </div>
+    <div id="publishStatus" style="margin-top:12px;font-size:13px"></div>
+    <p class="muted" style="font-size:12px;margin-top:14px">Create a token: GitHub → Settings → Developer settings → Personal access tokens → Classic with <b>repo</b> scope (write access), or Fine-grained with Repository access = <b>Astonie/amukiwa</b> and Contents = <b>Read and write</b>. Stored only in this browser.</p>`;
+  document.getElementById('saveGh').addEventListener('click', () => {
+    const s = { token: document.getElementById('gh_token').value.trim(), repo: document.getElementById('gh_repo').value.trim(), branch: document.getElementById('gh_branch').value.trim(), path: document.getElementById('gh_path').value.trim() };
+    localStorage.setItem('ghSettings', JSON.stringify(s));
+    toast('Settings saved');
+  });
+  document.getElementById('testGh').addEventListener('click', async () => {
+    const status = document.getElementById('publishStatus');
+    const s = { token: document.getElementById('gh_token').value.trim(), repo: document.getElementById('gh_repo').value.trim(), branch: document.getElementById('gh_branch').value.trim() };
+    localStorage.setItem('ghSettings', JSON.stringify(s));
+    status.textContent = 'Testing...';
+    try {
+      const res = await fetch(`https://api.github.com/repos/${s.repo}`, { headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json' } });
+      if (!res.ok) throw new Error((await res.json()).message || res.statusText);
+      const data = await res.json();
+      const scopes = res.headers.get('x-oauth-scopes') || '';
+      let writeTest = ' not tested';
+      try {
+        const put = await fetch(`https://api.github.com/repos/${s.repo}/contents/.admin-write-test.json`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'write test', content: btoa('test'), branch: s.branch || 'main' })
+        });
+        if (put.ok) {
+          const d = await put.json();
+          writeTest = 'OK (test file created, cleaning up...)';
+          await fetch(`https://api.github.com/repos/${s.repo}/contents/.admin-write-test.json`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: 'cleanup write test', sha: d.content.sha, branch: s.branch || 'main' })
+          });
+          writeTest = 'OK';
+        } else {
+          writeTest = `FAILED (${put.status}) — token lacks Contents write access`;
+        }
+      } catch (e) { writeTest = 'error'; }
+      status.innerHTML = `Connected: ${escapeHtml(data.full_name)} (push: ${data.permissions?.push ? 'yes' : 'no'})<br>` +
+        `Scopes: ${escapeHtml(scopes || 'none returned (fine-grained token)')}<br>` +
+        `Content write test: ${escapeHtml(writeTest)}`;
+    } catch (e) { status.textContent = 'Error: ' + e.message; }
+  });
+  document.getElementById('publishBtn').addEventListener('click', async () => {
+    const status = document.getElementById('publishStatus');
+    status.textContent = 'Publishing...';
+    const s = { token: document.getElementById('gh_token').value.trim(), repo: document.getElementById('gh_repo').value.trim(), branch: document.getElementById('gh_branch').value.trim(), path: document.getElementById('gh_path').value.trim() };
+    localStorage.setItem('ghSettings', JSON.stringify(s));
+    const ok = await publishToGitHub();
+    if (ok) { status.textContent = 'Published! Site will redeploy shortly.'; toast('Published'); }
+    else {
+      status.innerHTML = 'Publish failed:<br><pre style="white-space:pre-wrap;font-size:12px;margin-top:8px">' +
+        escapeHtml(lastPublishError || 'Unknown error — check browser console (F12).') + '</pre>';
+    }
+  });
+}
+
+// Settings
+function renderSettings() {
+  const pass = localStorage.getItem('adminPassword');
+  document.getElementById('panel-settings').innerHTML = `
+    <h2>Settings</h2>
+    <div class="field"><label>Admin password (stored in this browser only)</label><input id="set_pass" type="password" value="${escapeAttr(pass || '')}" placeholder="Leave blank to keep using API password"></div>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">To change the server password, use the API-based change or update installer defaults. This local override is optional.</p>
+    <button class="btn-sm" id="savePass">Save local password override</button>
+    <div style="margin-top:16px">
+      <button class="btn-sm btn-outline" id="exportC">Export content.json</button>
+      <button class="btn-sm btn-outline" id="importC">Import content.json</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none">
+      <button class="btn-sm btn-outline" id="clearPreview">Clear local preview data</button>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:12px">Password stored in this browser only. Clear preview data if the site shows stale content.</p>`;
+  document.getElementById('exportC').addEventListener('click', () => {
+    gather();
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'content.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Exported');
+  });
+  document.getElementById('importC').addEventListener('click', () => document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    f.text().then(t => {
+      const parsed = JSON.parse(t);
+      state = WC.mergeDefaults ? WC.mergeDefaults(parsed) : Object.assign({}, state, parsed);
+      WC.saveContent(state);
+      toast('Imported and saved locally');
+      renderDashboard();
+    }).catch(() => alert('Invalid JSON file'));
+  });
+  document.getElementById('savePass').addEventListener('click', () => {
+    const v = document.getElementById('set_pass').value.trim();
+    if (v) localStorage.setItem('adminPassword', v);
+    else localStorage.removeItem('adminPassword');
+    toast('Local password saved');
+  });
+  document.getElementById('clearPreview').addEventListener('click', () => {
+    localStorage.removeItem('weddingContent');
+    toast('Local preview data cleared');
+  });
+}
+
+// Gather
+function gather() {
+  // site
+  state.site = state.site || {};
+  ['eyebrow', 'storyTitle', 'storySub', 'detailsTitle', 'detailsSub', 'galleryTitle', 'gallerySub', 'partyTitle', 'partySub', 'rsvpTitle', 'rsvpSub', 'faqTitle', 'faqSub', 'guestbookTitle', 'guestbookSub', 'footerMessage'].forEach(k => {
+    const el = document.getElementById('site_' + k); if (el) state.site[k] = el.value;
+  });
+  // couple
+  state.couple = {
+    groom: document.getElementById('c_groom').value,
+    bride: document.getElementById('c_bride').value,
+    dateISO: document.getElementById('c_dateISO').value,
+    dateDisplay: document.getElementById('c_dateDisplay').value,
+    location: document.getElementById('c_location').value,
+    venue: document.getElementById('c_venue').value,
+    rsvpDeadline: document.getElementById('c_rsvpDeadline').value,
+    hashtag: document.getElementById('c_hashtag').value,
+  };
+  // invitation
+  state.invitation = {
+    eyebrow: document.getElementById('inv_eyebrow').value,
+    title: document.getElementById('inv_title').value,
+    message: document.getElementById('inv_message').value,
+    rsvpText: document.getElementById('inv_rsvp').value,
+  };
+  // media
+  state.media = {
+    heroImage: document.getElementById('m_hero').value,
+    coverImage: document.getElementById('m_cover').value,
+    musicUrl: document.getElementById('m_music') ? document.getElementById('m_music').value : '',
+    playlist: [...document.querySelectorAll('#panel-media .list-item')].map(it => ({
+      title: it.querySelector('.pl-title').value,
+      url: it.querySelector('.pl-url').value,
+    })).filter(t => t.url),
+  };
+  // story
+  const storyItems = document.querySelectorAll('#panel-story .list-item');
+  state.story = [...storyItems].map(it => ({
+    year: it.querySelector('.s-year').value,
+    title: it.querySelector('.s-title').value,
+    text: it.querySelector('.s-text').value,
+  }));
+  // details
+  const detailItems = document.querySelectorAll('#panel-details .list-item');
+  state.details = [...detailItems].map(it => ({
+    title: it.querySelector('.d-title').value,
+    time: it.querySelector('.d-time').value,
+    place: it.querySelector('.d-place').value,
+    address: it.querySelector('.d-address').value,
+    mapUrl: it.querySelector('.d-map').value,
+  }));
+  // party
+  const partyItems = document.querySelectorAll('#panel-party .list-item');
+  state.party = [...partyItems].map(it => ({
+    initial: it.querySelector('.p-initial').value,
+    name: it.querySelector('.p-name').value,
+    role: it.querySelector('.p-role').value,
+    note: it.querySelector('.p-note').value,
+  }));
+  // faq
+  const faqItems = document.querySelectorAll('#panel-faq .list-item');
+  state.faq = [...faqItems].map(it => ({
+    q: it.querySelector('.f-q').value,
+    a: it.querySelector('.f-a').value,
+  }));
+}
+
+// Save
+let lastPublishError = '';
+
+async function fetchFileSha(api, branch, token) {
+  const res = await fetch(`${api}?ref=${branch}&_=${Date.now()}`, {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Cache-Control': 'no-cache' }
+  });
+  if (res.ok) return (await res.json()).sha;
+  if (res.status === 404) return null;
+  const e = await res.json().catch(() => ({}));
+  const err = new Error(e.message || res.statusText);
+  err.status = res.status;
+  throw err;
+}
+
+async function publishToGitHub() {
+  lastPublishError = '';
+  const s = JSON.parse(localStorage.getItem('ghSettings') || '{}');
+  if (!s.token || !s.repo) return false;
+  gather();
+  const json = JSON.stringify(state, null, 2);
+  if (json.length > 700000) {
+    lastPublishError = `content.json is too large (${Math.round(json.length / 1024)} KB) — GitHub's API limit is about 1 MB once encoded.\n\nThis usually means uploaded images are stored inline as base64. Fix: in Media, replace them with hosted image URLs (e.g. upload to assets/uploads/ or an image host) and clear the inline data.`;
+    return false;
+  }
+  const content = btoa(unescape(encodeURIComponent(json)));
+  const api = `https://api.github.com/repos/${s.repo}/contents/${s.path || 'content.json'}`;
+  const branch = s.branch || 'main';
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const sha = await fetchFileSha(api, branch, s.token);
+      const body = { message: `Update ${s.path || 'content.json'} via admin`, content, branch };
+      if (sha) body.sha = sha;
+      const putRes = await fetch(api, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${s.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (putRes.ok) return true;
+
+      const err = await putRes.json().catch(() => ({}));
+      const msg = err.message || putRes.statusText;
+
+      if (putRes.status === 409) {
+        // file changed under us or stale sha — refresh and retry
+        if (attempt < 3) { await new Promise(r => setTimeout(r, 500 * attempt)); continue; }
+        lastPublishError = 'content.json changed on GitHub while you were editing (409 conflict).\n\nYour edits are still saved in this browser. Click Publish again — it will overwrite the newer version with yours.';
+        return false;
+      }
+      if (putRes.status === 403 && /not accessible/i.test(msg)) {
+        lastPublishError = 'Token can READ but cannot WRITE.\n\nEasiest fix — create a new CLASSIC token:\nGitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic).\nScope: tick "repo" only. Generate, copy it (starts ghp_), paste here.\n\nIf using a FINE-GRAINED token instead:\n• Repository access must be "Only select repositories" → add Astonie/amukiwa.\n  (NOT "Public repositories (read-only)" — that can never write.)\n• Permissions → Contents → Read and write.\n• Press "Update token permissions" to save.\n\nThen paste the new token and publish again.';
+        return false;
+      }
+      if (putRes.status === 401) {
+        lastPublishError = 'Token was rejected (401). It may have expired — generate a new one and paste it in the Publish tab.';
+        return false;
+      }
+      lastPublishError = `GitHub error (${putRes.status}): ${msg}`;
+      return false;
+    } catch (e) {
+      console.error(e);
+      if (attempt >= 3) { lastPublishError = e.message; return false; }
+      await new Promise(r => setTimeout(r, 500 * attempt));
+    }
+  }
+  return false;
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  gather();
+  let saved = false;
+  if (apiAuthed && apiCsrf) {
+    try {
+      const sess = await apiSession();
+      apiCsrf = sess.csrf || apiCsrf;
+      const r = await fetch('api/content.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+        credentials: 'same-origin',
+        body: JSON.stringify(state)
+      });
+      const j = await r.json();
+      if (r.status === 409) {
+        alert('Content changed on server since you loaded it. Reload the page to get latest, then re-apply your edits.');
+        return;
+      }
+      if (r.ok && j.ok) { saved = true; toast('Saved to API'); if (j.updated_at) { state.updated_at = j.updated_at; WC.saveContent(state); } }
+      else { console.warn('API save failed', j); }
+    } catch (e) { console.warn(e); }
+  }
+  if (!saved) {
+    const ok = WC.saveContent(state);
+    if (!ok) { alert('Save failed: storage quota exceeded. Remove large uploaded images/audio or publish to GitHub.'); return; }
+    toast('Saved locally');
+  }
+  renderDashboard();
+  // auto-publish if GitHub token configured (legacy)
+  const s = JSON.parse(localStorage.getItem('ghSettings') || '{}');
+  if (s.token && !saved) {
+    const pub = await publishToGitHub();
+    if (pub) toast('Published to GitHub');
+    else alert('Saved locally, but publishing failed:\n\n' + lastPublishError);
+  } else if (!saved && !s.token) {
+    alert('Saved to this browser only — visitors still see the old site.\n\nTo make changes live: open the Publish tab, paste a GitHub token, then click "Publish content.json".');
+  }
+});
+
+// Reset
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('Reset all content to defaults?')) {
+    WC.resetContent();
+    state = WC.getContent();
+    renderAll();
+    toast('Reset to defaults');
+  }
+});
+
+// Export
+document.getElementById('exportBtn').addEventListener('click', () => {
+  gather();
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'content.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Import
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      state = JSON.parse(ev.target.result);
+      WC.saveContent(state);
+      renderAll();
+      toast('Imported');
+    } catch (err) { alert('Invalid JSON'); }
+  };
+  reader.readAsText(file);
+});
+
+// Ensure invitation in content defaults
+if (!state.invitation) state.invitation = { eyebrow: 'You are cordially invited', title: 'to the wedding of', message: 'Together with our families, we invite you to share in our joy as we unite in marriage.', rsvpText: 'RSVP Now' };
+
+checkAuth();

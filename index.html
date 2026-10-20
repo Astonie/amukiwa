@@ -5,14 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Astonie & Wanangwa — Wedding</title>
   <meta name="description" content="Join us in celebrating the wedding of Astonie and Wanangwa." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Astonie & Wanangwa — Wedding" />
+  <meta property="og:description" content="Join us in celebrating the wedding of Astonie and Wanangwa." />
+  <meta property="og:image" content="assets/og-cover.jpg" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Astonie & Wanangwa — Wedding" />
+  <meta name="twitter:description" content="Join us in celebrating the wedding of Astonie and Wanangwa." />
+  <meta name="twitter:image" content="assets/og-cover.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="src/css/styles.css" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#6b2737" />
+  <!-- Analytics & error monitoring: configure via .env (VITE_ERROR_ENDPOINT) and uncomment snippets in DEPLOY.md -->
 </head>
 <body>
+  <a class="skip-link" href="#home">Skip to content</a>
   <div class="preloader" id="preloader"><div class="ring"></div></div>
   <canvas id="confetti"></canvas>
 
@@ -27,14 +40,14 @@
         <a href="#rsvp">RSVP</a>
         <a href="#faq">FAQ</a>
       </div>
-      <a class="nav-cta" href="invitation.html">Invitation</a>
+      <a class="nav-cta" href="invitation">Invitation</a>
       <button class="hamburger" id="hamburger" aria-label="menu">☰</button>
     </div>
   </nav>
   <div class="mobile-menu" id="mobileMenu">
     <a href="#story">Story</a><a href="#details">Details</a><a href="#gallery">Gallery</a>
     <a href="#party">Party</a><a href="#rsvp">RSVP</a><a href="#faq">FAQ</a>
-    <a href="invitation.html">Invitation</a>
+    <a href="invitation">Invitation</a>
   </div>
 
   <header class="hero" id="home">
@@ -45,7 +58,7 @@
       <div class="hero-loc" id="heroLoc">Blantyre, Malawi</div>
       <div class="hero-btns">
         <a class="btn btn-primary" href="#rsvp">RSVP Now</a>
-        <a class="btn btn-ghost" href="invitation.html">View Invitation</a>
+        <a class="btn btn-ghost" href="invitation">View Invitation</a>
       </div>
     </div>
     <div class="scroll-hint">Scroll</div>
@@ -136,6 +149,7 @@
           <div class="field"><label>Dietary requirements</label><input name="diet" placeholder="Vegetarian, allergies..."></div>
         </div>
         <div class="field"><label>Message to the couple</label><textarea name="msg" rows="3"></textarea></div>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0" aria-hidden="true">
         <button class="submit" type="submit">Send RSVP</button>
       </form>
     </div>
@@ -158,6 +172,7 @@
       <form class="gb-form" id="gbForm">
         <input name="name" placeholder="Your name" required>
         <input name="note" placeholder="Your message" required style="flex:2">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0" aria-hidden="true">
         <button type="submit">Sign</button>
       </form>
       <div class="gb-messages" id="gbMessages"></div>
@@ -170,7 +185,7 @@
       <p id="footerDate">December 6, 2026 · Blantyre, Malawi</p>
       <div class="links">
         <a href="#story">Story</a><a href="#details">Details</a><a href="#rsvp">RSVP</a>
-        <a href="invitation.html">Invitation</a><a href="admin.html">Manage</a>
+        <a href="invitation">Invitation</a><a href="manage">Manage</a>
       </div>
       <p id="footerMsg">With love, we can't wait to celebrate with you.</p>
       <div class="copyright">© 2026 Astonie & Wanangwa</div>
@@ -195,7 +210,10 @@
   <audio id="bgMusic"></audio>
 
   <a class="fab-rsvp" href="#rsvp">RSVP</a>
-  <script src="js/content.js"></script>
-  <script src="js/main.js"></script>
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="src/js/content.js"></script>
+  <script type="module" src="src/js/main.js"></script>
 </body>
 </html>

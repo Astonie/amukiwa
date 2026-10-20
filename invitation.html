@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="src/css/styles.css" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#6b2737" />
 </head>
@@ -15,9 +15,9 @@
   <canvas id="confetti"></canvas>
   <nav class="nav">
     <div class="container nav-inner">
-      <a class="logo" href="index.html">A & W</a>
-      <div class="nav-links"><a href="index.html">Home</a><a href="index.html#details">Details</a><a href="index.html#rsvp">RSVP</a></div>
-      <a class="nav-cta" href="index.html#rsvp">RSVP</a>
+      <a class="logo" href="/">A & W</a>
+      <div class="nav-links"><a href="/">Home</a><a href="/#details">Details</a><a href="/#rsvp">RSVP</a></div>
+      <a class="nav-cta" href="/#rsvp">RSVP</a>
     </div>
   </nav>
 
@@ -44,18 +44,23 @@
           <div class="date" id="invDate">December 6, 2026</div>
           <div class="venue" id="invVenue">Ceremony · 2:00 PM · Golden Peacock Hotel, Blantyre<br/>Reception · 5:00 PM · Golden Peacock Hotel, Blantyre</div>
           <p style="font-family:var(--font-display);font-style:italic;color:var(--muted)">Together with our families, we invite you to share in our joy as we unite in marriage.</p>
+          <p style="font-size:13px;letter-spacing:.08em;color:var(--burgundy);margin-top:14px;font-weight:600">Attendance is by invitation only.</p>
           <div class="qr-box"><img id="qrImg" src="" alt="QR"></div>
           <div class="invite-actions">
-            <a class="btn btn-primary" href="index.html#rsvp" id="invRsvpBtn">RSVP Now</a>
+            <a class="btn btn-primary" href="/#rsvp" id="invRsvpBtn">RSVP Now</a>
             <button class="btn btn-ghost" id="shareBtn">Share</button>
             <button class="btn btn-ghost" id="calBtn">Add to Calendar</button>
           </div>
+          <p style="font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:18px;text-align:center;opacity:.75">There is no perekani-perekani — you are welcome to bring a gift if you wish.</p>
         </div>
       </div>
     </div>
   </main>
 
-  <script src="js/content.js"></script>
-  <script src="js/invitation.js"></script>
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="src/js/content.js"></script>
+  <script type="module" src="src/js/invitation.js"></script>
 </body>
 </html>

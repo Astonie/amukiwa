@@ -1,0 +1,23 @@
+name: Backup content.json
+
+on:
+  push:
+    branches: [main]
+    paths: ['content.json', 'public/content.json']
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Snapshot content.json
+        run: |
+          mkdir -p backups
+          cp public/content.json "backups/content-$(date -u +%Y%m%d-%H%M%S).json" 2>/dev/null || cp content.json "backups/content-$(date -u +%Y%m%d-%H%M%S).json"
+      - name: Commit snapshot
+        run: |
+          git config user.name "content-backup"
+          git config user.email "backup@localhost"
+          git add backups/
+          git diff --cached --quiet || git commit -m "chore: snapshot content.json"
+          git push

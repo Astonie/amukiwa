@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Wedding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <style>
+    body{background:#f0ebe3}
+    .login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#f5efe5,#d9adad);display:flex;align-items:center;justify-content:center;z-index:9999}
+    .login-box{background:#fff;border-radius:20px;padding:40px;max-width:360px;width:90%;box-shadow:0 30px 70px rgba(42,36,32,.18);text-align:center}
+    .login-box h2{font-family:var(--font-script);font-size:48px;color:var(--burgundy);margin-bottom:6px}
+    .login-box input{width:100%;padding:12px 16px;border:1px solid var(--champagne);border-radius:10px;margin:12px 0;font-family:inherit}
+    .login-box button{width:100%;padding:12px;border-radius:10px;background:var(--burgundy);color:#fff;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+    .admin-app{display:none}
+    .admin-layout{display:flex;min-height:100vh}
+    .sidebar{width:240px;background:var(--burgundy-deep);color:#fff;padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
+    .sidebar .brand{font-family:var(--font-script);font-size:34px;margin-bottom:24px;text-align:center}
+    .sidebar nav{display:flex;flex-direction:column;gap:4px}
+    .sidebar .nav-item{padding:10px 14px;border-radius:10px;cursor:pointer;font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;transition:all .2s}
+    .sidebar .nav-item:hover{opacity:1;background:rgba(255,255,255,.08)}
+    .sidebar .nav-item.active{opacity:1;background:rgba(255,255,255,.15);color:var(--gold-light)}
+    .main{flex:1;padding:30px;max-width:1100px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .topbar h1{font-size:32px;color:var(--burgundy)}
+    .topbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .panel{display:none;background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
+    .panel.active{display:block}
+    .panel h2{font-size:26px;color:var(--burgundy);margin-bottom:18px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+    .row.single{grid-template-columns:1fr}
+    @media (max-width:600px){.row{grid-template-columns:1fr}}
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .field input,.field textarea,.field select{width:100%;padding:11px 14px;border:1px solid var(--champagne);border-radius:10px;font-family:inherit;font-size:14px;background:var(--ivory)}
+    .field input:focus,.field textarea:focus{outline:none;border-color:var(--burgundy)}
+    .list-editor{display:grid;gap:12px;margin-bottom:12px}
+    .list-item{background:var(--ivory);border-radius:12px;padding:14px;position:relative;border:1px solid var(--champagne)}
+    .list-item .row{margin-bottom:8px}
+    .list-item .remove{position:absolute;top:8px;right:8px;background:var(--rose-deep);color:#fff;border-radius:50%;width:24px;height:24px;font-size:14px;line-height:24px;text-align:center}
+    .list-item .move{position:absolute;top:8px;right:38px;background:var(--sage-deep);color:#fff;border-radius:50%;width:24px;height:24px;font-size:12px;line-height:24px;text-align:center;cursor:pointer}
+    .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:12px}
+    .media-card{background:var(--ivory);border-radius:10px;overflow:hidden;border:1px solid var(--champagne);position:relative}
+    .media-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+    .media-card .actions{padding:6px;display:flex;gap:4px;justify-content:space-between}
+    .media-card button{padding:4px 8px;font-size:10px;border-radius:6px;background:var(--burgundy);color:#fff}
+    .btn-sm{padding:9px 16px;border-radius:10px;background:var(--burgundy);color:#fff;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+    .btn-outline{background:#fff;color:var(--burgundy);border:1px solid var(--burgundy)}
+    .save-bar{position:sticky;bottom:0;background:#fff;padding:14px 0;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--champagne);margin-top:20px;flex-wrap:wrap}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--burgundy);color:#fff;padding:12px 24px;border-radius:999px;display:none;z-index:200}
+    .toast.show{display:block}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px;border-bottom:1px solid var(--champagne);text-align:left;vertical-align:top}
+    .muted{color:var(--muted)}
+    @media (max-width:768px){.admin-layout{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}}
+  </style>
+</head>
+<body>
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h2>Admin</h2>
+      <p class="muted" style="margin-bottom:14px">Enter admin password</p>
+      <input type="password" id="loginPass" placeholder="Password">
+      <button id="loginBtn">Enter</button>
+    </div>
+  </div>
+
+  <div class="admin-app" id="adminApp">
+    <div class="admin-layout">
+      <aside class="sidebar">
+        <div class="brand">A & W</div>
+        <nav id="sideNav"></nav>
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15)">
+          <div class="nav-item" id="logoutBtn">Logout</div>
+        </div>
+      </aside>
+      <main class="main">
+        <div class="topbar">
+          <h1 id="panelTitle">Dashboard</h1>
+          <div class="actions">
+            <a class="btn-sm btn-outline" href="/?preview=1" target="_blank">Preview Site</a>
+            <button class="btn-sm" id="saveBtn">Save Changes</button>
+          </div>
+        </div>
+        <div id="panels"></div>
+        <div class="save-bar">
+          <button class="btn-sm btn-outline" id="resetBtn">Reset Defaults</button>
+          <button class="btn-sm btn-outline" id="exportBtn">Export content.json</button>
+          <button class="btn-sm btn-outline" id="importBtn">Import</button>
+          <input type="file" id="fileInput" accept="application/json" style="display:none">
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved</div>
+
+  <script type="module" src="src/js/content.js"></script>
+  <script type="module" src="src/js/admin.js"></script>
+</body>
+</html>
