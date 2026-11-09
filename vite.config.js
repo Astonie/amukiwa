@@ -24,6 +24,9 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         invitation: resolve(__dirname, 'invitation.html'),
+        invitationPrint: resolve(__dirname, 'invitation-print.html'),
+        invitationPortrait: resolve(__dirname, 'invitation-portrait.html'),
+        invitationLandscape: resolve(__dirname, 'invitation-landscape.html'),
         manage: resolve(__dirname, 'manage.html'),
       },
     },

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invitation — Landscape Print</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <style>
+    @page { size: A5 landscape; margin: 8mm; }
+    body { background: #fff; margin: 0; padding: 20px; }
+    .invite-card { max-width: 760px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; text-align: center; }
+    .invite-card .left { border-right: 1px solid #e9ddc9; padding-right: 24px; }
+    .print-actions { text-align: center; margin: 20px; }
+    @media print { .print-actions, .nav, .scroll-progress, .back-to-top { display: none !important; } body { background: #fff; padding: 0; } .invite-card { box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <main class="invite-card" style="margin:0 auto">
+    <div class="left">
+      <div class="rings"><svg viewBox="0 0 120 60" width="140" height="70" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e6c88a"/>
+      <stop offset="50%" stop-color="#c9a96e"/>
+      <stop offset="100%" stop-color="#a8824a"/>
+    </linearGradient>
+  </defs>
+  <circle cx="42" cy="30" r="22" fill="none" stroke="url(#goldGrad)" stroke-width="3"/>
+  <circle cx="78" cy="30" r="22" fill="none" stroke="url(#goldGrad)" stroke-width="3"/>
+  <polygon points="78,6 82,10 78,14 74,10" fill="#6b2737"/>
+  <circle cx="78" cy="10" r="1.5" fill="#f5efe5"/>
+</svg></div>
+      <div class="line"></div>
+      <div class="to" id="guestLine">Dear Honored Guest,</div>
+      <p class="intro">Together with our families, we joyfully invite you to our Chimanyano Celebration</p>
+      <div class="names" id="invNames">Astonie &amp; Wanangwa</div>
+      <div class="line"></div>
+      <div class="date" id="invDate">Saturday, December 6, 2026</div>
+    </div>
+    <div class="right">
+      <div class="venue" id="invVenue">Reception 11:30 AM – 3:30 PM · Mzimba Hall, Golden Peacock Hotel, Blantyre</div>
+      <p class="message">Our Chimanyano Celebration. Your presence would mean the world to us.</p>
+      <p class="attendance">Dress Code: Smart Elegant — Color theme: white & dark blue</p>
+
+
+        <div class="qr-box"><img id="qrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fwww.google.com%2Fmaps%2Fsearch%2F%3Fapi%3D1%26query%3DGolden%2BPeacock%2BHotel%2BBlantyre%2BMalawi" crossorigin="anonymous" alt="QR code for venue map"></div>
+      <p class="attendance">Attendance is by invitation only.</p>
+    </div>
+  </main>
+  <div class="print-actions">
+    <button class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
+    <button class="btn btn-ghost" id="saveImgBtn">Save as Image</button>
+  </div>
+  <script type="module" src="src/js/content.js"></script>
+  <script type="module" src="src/js/invitation-print.js"></script>
+</body>
+</html>
+EOF
+echo done

@@ -217,15 +217,24 @@ footer .links a:hover{opacity:1}
 .envelope.open .flap{transform:rotateX(-180deg)}
 .envelope .body{position:absolute;inset:0;background:linear-gradient(135deg,#fbf8f3,#e9ddc9);border-radius:10px;box-shadow:var(--shadow-lg)}
 .envelope .seal{position:absolute;top:125px;left:50%;transform:translateX(-50%);width:58px;height:58px;border-radius:50%;background:var(--burgundy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-script);font-size:22px;z-index:4;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.invite-card{background:var(--card);border-radius:18px;padding:44px 34px;max-width:540px;margin:0 auto;text-align:center;box-shadow:var(--shadow-lg);border:1px solid var(--champagne)}
-.invite-card .to{font-family:var(--font-display);font-style:italic;font-size:20px;color:var(--muted);margin-bottom:10px}
-.invite-card .names{font-family:var(--font-script);font-size:70px;color:var(--burgundy);line-height:1;margin:12px 0}
-.invite-card .line{width:70px;height:1px;background:var(--gold);margin:18px auto}
-.invite-card .date{font-family:var(--font-display);font-size:19px;letter-spacing:.16em;text-transform:uppercase;margin:12px 0}
-.invite-card .venue{color:var(--muted);font-size:14px;margin-bottom:22px;line-height:1.7}
-.invite-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
-.qr-box{margin:22px auto;width:170px;height:170px;background:#fff;border:1px solid var(--champagne);border-radius:10px;display:flex;align-items:center;justify-content:center}
-.qr-box img{width:150px;height:150px}
+/* invite card - professional */
+.invite-card{background:#fff;border-radius:2px;padding:72px 56px;max-width:580px;margin:0 auto;text-align:center;box-shadow:0 20px 60px rgba(42,36,32,.12);border:1px solid #e5d9c3;position:relative}
+.invite-card::before{content:'';position:absolute;inset:14px;border:1px solid rgba(201,169,110,.5);pointer-events:none}
+.invite-card::after{content:'';position:absolute;inset:18px;border:1px solid rgba(201,169,110,.25);pointer-events:none}
+.invite-card > * { position:relative; }
+.invite-card .monogram{font-family:var(--font-script);font-size:34px;color:var(--gold);line-height:1;margin-bottom:4px;letter-spacing:.04em;opacity:.85}
+.invite-card .to{font-family:var(--font-display);font-style:italic;font-size:20px;color:var(--muted);margin:16px 0 6px}
+.invite-card .intro{font-family:var(--font-display);font-size:15px;color:var(--muted);margin:8px 0 4px;letter-spacing:.02em}
+.invite-card .names{font-family:var(--font-script);font-size:clamp(62px,12vw,92px);color:var(--burgundy);line-height:1;margin:14px 0 6px;text-shadow:0 2px 16px rgba(107,39,55,.1)}
+.invite-card .line{width:100px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:20px auto}
+.invite-card .date{font-family:var(--font-display);font-size:18px;letter-spacing:.24em;text-transform:uppercase;margin:10px 0 4px;color:var(--ink)}
+.invite-card .venue{color:var(--muted);font-size:13px;margin-bottom:18px;line-height:1.8;letter-spacing:.03em}
+.invite-card .message{font-family:var(--font-display);font-style:italic;color:var(--muted);margin:18px 0;font-size:15px}
+.invite-card .attendance{font-size:9px;letter-spacing:.2em;color:var(--burgundy);font-weight:600;margin:14px 0 4px;text-transform:uppercase;opacity:.8}
+.invite-card .qr-box{margin:16px auto;width:110px;height:110px;background:#fff;border:1px solid var(--champagne);border-radius:2px;display:flex;align-items:center;justify-content:center}
+.invite-card .qr-box img{width:96px;height:96px}
+.invite-card .invite-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.invite-card .note{font-size:8px;letter-spacing:.05em;color:var(--muted);margin-top:14px;opacity:.6}
 
 /* reveal */
 .reveal{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1)}
@@ -319,3 +328,14 @@ footer { background: linear-gradient(180deg, var(--burgundy-deep), var(--burgund
 /* Page transition */
 body { animation: pageFadeIn .5s ease; }
 @keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Print: keep invitation on one page */
+@media print {
+  @page { margin: 8mm; }
+  .invite-card { transform: scale(0.92); transform-origin: top center; box-shadow: none !important; }
+  .invite-actions, .print-actions, .scroll-progress, .back-to-top, .toast { display: none !important; }
+  body { background: #fff; }
+}
+
+.invite-card .rings { margin-bottom: 8px; display: flex; justify-content: center; }
+.invite-card .rings svg { filter: drop-shadow(0 2px 6px rgba(201,169,110,.4)); }

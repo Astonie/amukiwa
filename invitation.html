@@ -36,22 +36,39 @@
 
       <div id="cardStage" style="display:none;margin-top:40px">
         <div class="invite-card">
+          <div class="rings"><svg viewBox="0 0 120 60" width="140" height="70" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e6c88a"/>
+      <stop offset="50%" stop-color="#c9a96e"/>
+      <stop offset="100%" stop-color="#a8824a"/>
+    </linearGradient>
+  </defs>
+  <circle cx="42" cy="30" r="22" fill="none" stroke="url(#goldGrad)" stroke-width="3"/>
+  <circle cx="78" cy="30" r="22" fill="none" stroke="url(#goldGrad)" stroke-width="3"/>
+  <polygon points="78,6 82,10 78,14 74,10" fill="#6b2737"/>
+  <circle cx="78" cy="10" r="1.5" fill="#f5efe5"/>
+</svg></div>
+          <div class="line"></div>
           <div class="to" id="guestLine">Dear Honored Guest,</div>
+          <p class="intro">Together with our families, we joyfully invite you to our Chimanyano Celebration</p>
+          <div class="names" id="invNames">Astonie &amp; Wanangwa</div>
           <div class="line"></div>
-          <div style="font-size:13px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:6px" id="invEyebrow">You are cordially invited to the wedding of</div>
-          <div class="names" id="invNames">Astonie & Wanangwa</div>
-          <div class="line"></div>
-          <div class="date" id="invDate">December 6, 2026</div>
-          <div class="venue" id="invVenue">Ceremony · 2:00 PM · Golden Peacock Hotel, Blantyre<br/>Reception · 5:00 PM · Golden Peacock Hotel, Blantyre</div>
-          <p style="font-family:var(--font-display);font-style:italic;color:var(--muted)">Together with our families, we invite you to share in our joy as we unite in marriage.</p>
-          <p style="font-size:13px;letter-spacing:.08em;color:var(--burgundy);margin-top:14px;font-weight:600">Attendance is by invitation only.</p>
-          <div class="qr-box"><img id="qrImg" src="" alt="QR"></div>
+          <div class="date" id="invDate">Saturday, December 6, 2026</div>
+          <div class="venue" id="invVenue">Reception 11:30 AM – 3:30 PM · Mzimba Hall, Golden Peacock Hotel, Blantyre</div>
+          <p class="message">Our Chimanyano Celebration. Your presence would mean the world to us.</p>
+          <p class="attendance">Dress Code: Smart Elegant — Color theme: white & dark blue</p>
+
+
+          <div class="qr-box"><img id="qrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fwww.google.com%2Fmaps%2Fsearch%2F%3Fapi%3D1%26query%3DGolden%2BPeacock%2BHotel%2BBlantyre%2BMalawi" crossorigin="anonymous" alt="QR code for venue map"></div>
+          <p style="font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.08em">Scan for venue &amp; map</p>
           <div class="invite-actions">
             <a class="btn btn-primary" href="/#rsvp" id="invRsvpBtn">RSVP Now</a>
             <button class="btn btn-ghost" id="shareBtn">Share</button>
             <button class="btn btn-ghost" id="calBtn">Add to Calendar</button>
+            <button class="btn btn-ghost" id="saveImgBtn">Save as Image</button>
           </div>
-          <p style="font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:18px;text-align:center;opacity:.75">There is no perekani-perekani — you are welcome to bring a gift if you wish.</p>
+          <p class="attendance">Attendance is by invitation only.</p>
         </div>
       </div>
     </div>

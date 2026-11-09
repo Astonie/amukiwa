@@ -39,7 +39,7 @@
     ]
   },
   "invitation": {
-    "eyebrow": "You are cordially invited",
+    "eyebrow": "you are cordially invited to an intimate wedding of",
     "title": "to the wedding of",
     "message": "Together with our families, we invite you to share in our joy as we unite in marriage.",
     "rsvpText": "RSVP Now"
@@ -68,16 +68,16 @@
   ],
   "details": [
     {
-      "title": "Luncheon",
-      "time": "1:00 PM",
-      "place": "Golden Peacock Hotel",
+      "title": "Lunch",
+      "time": "11:30 AM",
+      "place": "Golden Peacock Hotel, Blantyre",
       "address": "Blantyre, Malawi",
       "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
     },
     {
       "title": "Reception",
-      "time": "2:00 PM - 4:30 PM",
-      "place": "Mzimba Hall - Golden Peacock Hotel",
+      "time": "11:30 AM - 3:30 PM",
+      "place": "Mzimba Hall, Golden Peacock Hotel, Blantyre",
       "address": "Blantyre, Malawi",
       "mapUrl": "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre"
     }

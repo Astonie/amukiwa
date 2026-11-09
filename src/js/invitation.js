@@ -1,3 +1,5 @@
+import QRCode from 'qrcode';
+import html2canvas from 'html2canvas';
 import { initMonitoring } from '../lib/monitoring.js';
 initMonitoring('invitation');
 async function loadContent() {
@@ -62,7 +64,7 @@ if (inv.eyebrow) document.getElementById('invEyebrow').textContent = inv.eyebrow
 if (inv.rsvpText) document.getElementById('invRsvpBtn').textContent = inv.rsvpText;
 document.title = `You're Invited — ${couple.groom} & ${couple.bride}`;
 const d0 = C.details[0], d1 = C.details[1] || C.details[0];
-document.getElementById('invVenue').innerHTML = `${d0.title} · ${d0.time} · ${d0.place}<br/>${d1.title} · ${d1.time} · ${d1.place}`;
+document.getElementById('invVenue').innerHTML = `${d1.title} ${d1.time} · ${d1.place}`;
 
 const envelope = document.getElementById('envelope');
 const envWrap = document.getElementById('envWrap');
@@ -77,14 +79,19 @@ function openEnvelope() {
     envelopeStage.style.display = 'none';
     cardStage.style.display = 'block';
     launchConfetti();
+    const qr = document.getElementById('qrImg');
+    if (qr) {
+      const mapUrl = 'https://www.google.com/maps/search/?api=1&query=Golden+Peacock+Hotel+Blantyre+Malawi';
+      QRCode.toDataURL(mapUrl, { width: 160, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } })
+        .then(url => { qr.src = url; })
+        .catch(e => { console.error('QR gen failed', e); });
+    }
   }, 900);
 }
 envWrap.addEventListener('click', openEnvelope);
 setTimeout(openEnvelope, 1200);
 
 const inviteUrl = location.href;
-const qr = document.getElementById('qrImg');
-qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(inviteUrl)}`;
 
 document.getElementById('shareBtn').addEventListener('click', async () => {
   const data = { title: `${couple.groom} & ${couple.bride} Wedding`, text: 'You are invited!', url: inviteUrl };
@@ -134,3 +141,15 @@ const btt = document.getElementById('backToTop');
 function onScroll() { const h = document.documentElement; const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100; if (sp) sp.style.width = pct + '%'; if (btt) btt.classList.toggle('show', h.scrollTop > 400); }
 window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
 if (btt) btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+const saveImgBtn = document.getElementById('saveImgBtn');
+if (saveImgBtn) saveImgBtn.addEventListener('click', async () => {
+  const card = document.querySelector('.invite-card');
+  if (!card) return;
+  try {
+    const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff' });
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a'); a.href = url; a.download = 'invitation.png'; a.click();
+    toast && toast('Saved as image');
+  } catch (e) { console.error(e); alert('Could not save image'); }
+});
