@@ -1,7 +1,9 @@
 import { initMonitoring } from '../lib/monitoring.js';
 initMonitoring('admin');
 const WC = window.WeddingContent;
-if (!localStorage.getItem('adminPassword')) localStorage.setItem('adminPassword', 'admin');
+// NOTE: No default local password. The server is the source of truth when the API is reachable.
+// A local password is ONLY used as a fallback for static hosting (GitHub Pages) where api/* is
+// unreachable, and it must be explicitly set by the user — never seeded as 'admin'.
 let state = WC.getContent();
 
 const tabs = [
@@ -30,10 +32,10 @@ let apiCsrf = null;
 async function apiSession() {
   try {
     const r = await fetch('api/session.php', { cache: 'no-store', credentials: 'same-origin' });
-    if (!r.ok) return { authed: false };
+    if (!r.ok) return { authed: false, __unreachable: r.status === 404 || r.status >= 500 };
     const j = await r.json();
-    return j;
-  } catch (e) { return { authed: false }; }
+    return { ...j, __unreachable: false };
+  } catch (e) { return { authed: false, __unreachable: true }; }
 }
 async function apiLogin(username, password) {
   try {
@@ -43,9 +45,14 @@ async function apiLogin(username, password) {
       credentials: 'same-origin',
       body: JSON.stringify({ username, password })
     });
-    const j = await r.json();
-    return j;
-  } catch (e) { return { error: 'Network error' }; }
+    const text = await r.text();
+    let j;
+    try { j = JSON.parse(text); } catch { j = null; }
+    if (!j || typeof j !== 'object') return { error: 'Network error', __unreachable: true, __status: r.status };
+    if (r.ok && j.ok) return j;
+    // 401 = API reachable but credentials wrong. 404/500/non-JSON = API not deployed.
+    return { ...j, __unreachable: r.status !== 401, __status: r.status };
+  } catch (e) { return { error: 'Network error', __unreachable: true }; }
 }
 async function apiLogout() {
   try { await fetch('api/logout.php', { method: 'POST', credentials: 'same-origin' }); } catch (e) {}
@@ -70,18 +77,28 @@ async function checkAuth() {
   if (sess.authed) {
     apiAuthed = true; apiUsername = sess.username || 'admin'; apiCsrf = sess.csrf || null;
     sessionStorage.setItem('adminAuth', '1');
+    sessionStorage.setItem('adminAuthMode', 'api');
     sessionStorage.setItem('adminPreview', '1');
     loginScreen.style.display = 'none';
     adminApp.style.display = 'block';
     await loadStateFromApi();
     initAdmin();
+    return;
   }
-  if (sessionStorage.getItem('adminAuth') === '1') {
+  // Session-storage auto-login is ONLY allowed in static-hosting mode (API unreachable)
+  // and only when the user previously logged in with a local password. It must never
+  // bypass the server password when the API is reachable.
+  const localMode = sessionStorage.getItem('adminAuthMode') === 'local';
+  if (localMode && sessionStorage.getItem('adminAuth') === '1' && sess.__unreachable) {
     sessionStorage.setItem('adminPreview', '1');
     loginScreen.style.display = 'none';
     adminApp.style.display = 'block';
     await loadStateFromApi();
     initAdmin();
+  } else if (sessionStorage.getItem('adminAuth') === '1' && !sess.__unreachable) {
+    // API reachable but no valid server session → force re-login (e.g. after password change).
+    sessionStorage.removeItem('adminAuth');
+    sessionStorage.removeItem('adminAuthMode');
   }
 }
 document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -92,29 +109,39 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     const sess = await apiSession();
     apiAuthed = true; apiUsername = sess.username || res.username || user; apiCsrf = sess.csrf || res.csrf || null;
     sessionStorage.setItem('adminAuth', '1');
+    sessionStorage.setItem('adminAuthMode', 'api');
     sessionStorage.setItem('adminPreview', '1');
     loginScreen.style.display = 'none';
     adminApp.style.display = 'block';
     await loadStateFromApi();
     initAdmin();
-  } else {
+  } else if (res && res.__unreachable) {
+    // Static hosting (GitHub Pages) — no PHP API available. Fall back to an explicit local password.
     const stored = localStorage.getItem('adminPassword');
-    if (stored && pass === stored) {
+    if (!stored) {
+      alert('No server API found (static hosting?) and no local password is set. Please set a local password first (it is stored only in this browser).');
+      return;
+    }
+    if (pass === stored) {
       sessionStorage.setItem('adminAuth', '1');
+      sessionStorage.setItem('adminAuthMode', 'local');
       sessionStorage.setItem('adminPreview', '1');
       loginScreen.style.display = 'none';
       adminApp.style.display = 'block';
       await loadStateFromApi();
       initAdmin();
     } else {
-      alert(res && res.error ? res.error : 'Wrong password');
+      alert('Wrong password');
     }
+  } else {
+    alert(res && res.error ? res.error : 'Wrong password');
   }
 });
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await apiLogout();
   apiAuthed = false; apiUsername = null; apiCsrf = null;
   sessionStorage.removeItem('adminAuth');
+  sessionStorage.removeItem('adminAuthMode');
   location.reload();
 });
 
@@ -565,18 +592,31 @@ function renderPublish() {
 // Settings
 function renderSettings() {
   const pass = localStorage.getItem('adminPassword');
+  const isApi = apiAuthed && sessionStorage.getItem('adminAuthMode') === 'api';
   document.getElementById('panel-settings').innerHTML = `
     <h2>Settings</h2>
-    <div class="field"><label>Admin password (stored in this browser only)</label><input id="set_pass" type="password" value="${escapeAttr(pass || '')}" placeholder="Leave blank to keep using API password"></div>
-    <p class="muted" style="font-size:12px;margin-bottom:10px">To change the server password, use the API-based change or update installer defaults. This local override is optional.</p>
-    <button class="btn-sm" id="savePass">Save local password override</button>
+    ${isApi ? `
+    <h3 style="margin:0 0 10px;font-size:20px;color:var(--burgundy)">Change server password</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">This updates the real password on ${escapeAttr(location.origin)}. After changing, log out all other sessions — the old password will stop working.</p>
+    <div class="field"><label>Current password</label><input id="pw_current" type="password" autocomplete="current-password"></div>
+    <div class="field"><label>New password (min 8 characters)</label><input id="pw_new" type="password" autocomplete="new-password"></div>
+    <div class="field"><label>Confirm new password</label><input id="pw_confirm" type="password" autocomplete="new-password"></div>
+    <button class="btn-sm" id="changeServerPass">Change server password</button>
+    <div id="pwStatus" style="margin-top:10px;font-size:13px"></div>
+    <hr style="margin:20px 0;border:none;border-top:1px solid var(--champagne)">
+    ` : `
+    <h3 style="margin:0 0 10px;font-size:20px;color:var(--burgundy)">Local password (static hosting only)</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">No server API is reachable, so login uses this browser-only password. It does not affect the server database.</p>
+    <div class="field"><label>Admin password (stored in this browser only)</label><input id="set_pass" type="password" value="${escapeAttr(pass || '')}" placeholder="Leave blank to clear local password"></div>
+    <button class="btn-sm" id="savePass">Save local password</button>
+    `}
     <div style="margin-top:16px">
       <button class="btn-sm btn-outline" id="exportC">Export content.json</button>
       <button class="btn-sm btn-outline" id="importC">Import content.json</button>
       <input type="file" id="importFile" accept="application/json" style="display:none">
       <button class="btn-sm btn-outline" id="clearPreview">Clear local preview data</button>
     </div>
-    <p class="muted" style="font-size:12px;margin-top:12px">Password stored in this browser only. Clear preview data if the site shows stale content.</p>`;
+    <p class="muted" style="font-size:12px;margin-top:12px">Clear preview data if the site shows stale content.</p>`;
   document.getElementById('exportC').addEventListener('click', () => {
     gather();
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -599,11 +639,48 @@ function renderSettings() {
       renderDashboard();
     }).catch(() => alert('Invalid JSON file'));
   });
-  document.getElementById('savePass').addEventListener('click', () => {
+  document.getElementById('savePass')?.addEventListener('click', () => {
     const v = document.getElementById('set_pass').value.trim();
     if (v) localStorage.setItem('adminPassword', v);
     else localStorage.removeItem('adminPassword');
     toast('Local password saved');
+  });
+  document.getElementById('changeServerPass')?.addEventListener('click', async () => {
+    const status = document.getElementById('pwStatus');
+    const current = document.getElementById('pw_current').value;
+    const next = document.getElementById('pw_new').value;
+    const confirm = document.getElementById('pw_confirm').value;
+    status.textContent = '';
+    if (!current || !next) { status.textContent = 'Current and new password are required.'; return; }
+    if (next.length < 8) { status.textContent = 'New password must be at least 8 characters.'; return; }
+    if (next !== confirm) { status.textContent = 'New passwords do not match.'; return; }
+    status.textContent = 'Changing...';
+    try {
+      const sess = await apiSession();
+      apiCsrf = sess.csrf || apiCsrf;
+      const r = await fetch('api/password.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ current_password: current, new_password: next, confirm_password: confirm })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok) {
+        status.textContent = 'Password changed. Please log in again with the new password.';
+        toast('Password changed');
+        document.getElementById('pw_current').value = '';
+        document.getElementById('pw_new').value = '';
+        document.getElementById('pw_confirm').value = '';
+        // Clear any cached local password so the old default cannot be reused.
+        localStorage.removeItem('adminPassword');
+        // Force re-login so stale sessions are evicted.
+        setTimeout(async () => { await apiLogout(); sessionStorage.removeItem('adminAuth'); sessionStorage.removeItem('adminAuthMode'); location.reload(); }, 800);
+      } else {
+        status.textContent = j.error || 'Password change failed.';
+      }
+    } catch (e) {
+      status.textContent = 'Network error while changing password.';
+    }
   });
   document.getElementById('clearPreview').addEventListener('click', () => {
     localStorage.removeItem('weddingContent');
