@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Wedding Album — Astonie &amp; Wanangwa</title>
+  <meta name="description" content="Scan, snap &amp; share your favorite wedding moments in Astonie &amp; Wanangwa's centralized wedding album." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6b2737" />
+</head>
+<body class="album-body">
+  <canvas id="confetti"></canvas>
+
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="logo" href="/" id="navLogo">A &amp; W</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/#details">Details</a>
+        <a href="/#gallery">Couple Gallery</a>
+        <a href="invitation">Invitation</a>
+        <a href="/#rsvp">RSVP</a>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-qr-pill" id="openQrModalBtn" type="button" title="Show Table QR Code">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 19h3"/></svg>
+          <span>QR Card</span>
+        </button>
+        <a class="nav-cta" href="#uploadBox">Snap &amp; Upload</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="album-hero">
+    <div class="container album-hero-inner">
+      <div class="hero-eyebrow" id="albumEyebrow">Shared Wedding Album</div>
+      <h1 class="album-hero-title" id="albumNames">Astonie <span class="hero-amp">&amp;</span> Wanangwa</h1>
+      <p class="album-hero-sub" id="albumSub">Every smile, dance, and candid moment — captured by you, cherished forever in one centralized album.</p>
+
+      <div class="album-quick-actions">
+        <button type="button" class="btn btn-primary album-cam-btn" id="quickCameraBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Take a Photo Now
+        </button>
+        <button type="button" class="btn btn-ghost album-pick-btn" id="quickUploadBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload from Gallery
+        </button>
+        <button type="button" class="btn btn-ghost" id="heroQrBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 18h3v3h-3z"/></svg>
+          Share QR Code
+        </button>
+      </div>
+
+      <div class="album-stats" id="albumStats">
+        <div class="stat-pill"><strong id="statPhotos">0</strong><span>Moments Shared</span></div>
+        <div class="stat-pill"><strong id="statGuests">0</strong><span>Contributors</span></div>
+        <div class="stat-pill"><strong id="statLikes">0</strong><span>Hearts</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="album-main">
+    <div class="container">
+      <!-- Upload Card -->
+      <section class="album-upload-card" id="uploadBox">
+        <div class="album-upload-grid">
+          <div class="album-upload-form-col">
+            <div class="badge" style="margin-bottom:8px">Add Your Photos</div>
+            <h2>Share Your Moments</h2>
+            <p class="muted" style="font-size:14px;margin-bottom:18px">Snap a live picture with your phone camera or pick multiple photos from your camera roll.</p>
+
+            <form id="albumUploadForm">
+              <!-- Hidden file inputs: one for direct camera capture, one for multi-photo gallery selection -->
+              <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" />
+              <input type="file" id="galleryInput" accept="image/*" multiple style="display:none" />
+
+              <div class="upload-dropzone" id="uploadDropzone">
+                <div class="dropzone-empty" id="dropzoneEmpty">
+                  <div class="dropzone-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  </div>
+                  <div class="dropzone-title">Tap to choose photos or take a picture</div>
+                  <div class="dropzone-sub">Supports JPEG, PNG &amp; WebP · Up to 10 photos at once</div>
+                  <div class="dropzone-btns">
+                    <button type="button" class="btn-sm" id="dzCameraBtn">📷 Open Camera</button>
+                    <button type="button" class="btn-sm btn-outline" id="dzGalleryBtn">🖼️ Choose Photos</button>
+                  </div>
+                </div>
+                <div class="dropzone-previews" id="dropzonePreviews" style="display:none"></div>
+              </div>
+
+              <div class="form-row" style="margin-top:16px">
+                <div class="field">
+                  <label for="guestNameInput">Your Name</label>
+                  <input id="guestNameInput" name="guest_name" placeholder="e.g. Auntie Grace / James" required />
+                </div>
+                <div class="field">
+                  <label for="photoCategorySelect">Moment Category</label>
+                  <select id="photoCategorySelect" name="category">
+                    <option value="Reception">Reception &amp; Dances</option>
+                    <option value="Ceremony">Ceremony</option>
+                    <option value="Couple">The Couple</option>
+                    <option value="Candid">Candid Moments</option>
+                    <option value="Selfies">Selfies &amp; Table Shots</option>
+                    <option value="Family & Friends">Family &amp; Friends</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="photoCaptionInput">Caption or Blessing (optional)</label>
+                <input id="photoCaptionInput" name="caption" placeholder="Add a sweet note about this moment..." maxlength="240" />
+              </div>
+
+              <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0" aria-hidden="true" />
+
+              <div class="upload-progress-wrap" id="uploadProgressWrap" style="display:none">
+                <div class="upload-progress-bar"><div class="upload-progress-fill" id="uploadProgressFill"></div></div>
+                <div class="upload-progress-text" id="uploadProgressText">Uploading moments…</div>
+              </div>
+
+              <button type="submit" class="submit" id="uploadSubmitBtn">Upload to Wedding Album</button>
+            </form>
+          </div>
+
+          <div class="album-qr-col">
+            <div class="table-qr-card" id="printableQrCard">
+              <div class="qr-card-ornament">❦</div>
+              <div class="qr-card-eyebrow">Capture the Love</div>
+              <div class="qr-card-couple" id="qrCardCouple">Astonie &amp; Wanangwa</div>
+              <p class="qr-card-desc">Scan with your phone camera to snap &amp; upload photos to our live shared wedding album</p>
+              <div class="qr-card-box">
+                <img id="albumQrImg" alt="Scan to open Shared Wedding Album" src="" />
+              </div>
+              <div class="qr-card-url" id="qrCardUrl">amukiwa.com/album</div>
+              <div class="qr-card-hashtag" id="qrCardHashtag">#AstonieAndWanangwa</div>
+            </div>
+            <div class="qr-card-actions">
+              <button type="button" class="btn-sm btn-outline" id="downloadQrCardBtn">Download Table QR Card</button>
+              <button type="button" class="btn-sm btn-outline" id="printQrCardBtn">Print Table Tent</button>
+              <button type="button" class="btn-sm btn-outline" id="copyAlbumLinkBtn">Copy Album Link</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Centralized Feed -->
+      <section class="album-feed-section" id="albumFeed">
+        <div class="album-toolbar">
+          <div class="album-filters" id="albumCategoryTabs">
+            <button type="button" class="filter-chip active" data-cat="All">All Moments</button>
+            <button type="button" class="filter-chip" data-cat="Reception">Reception</button>
+            <button type="button" class="filter-chip" data-cat="Ceremony">Ceremony</button>
+            <button type="button" class="filter-chip" data-cat="Couple">The Couple</button>
+            <button type="button" class="filter-chip" data-cat="Candid">Candid</button>
+            <button type="button" class="filter-chip" data-cat="Selfies">Selfies</button>
+            <button type="button" class="filter-chip" data-cat="Family & Friends">Family &amp; Friends</button>
+          </div>
+
+          <div class="album-search-sort">
+            <input type="search" id="albumSearchInput" placeholder="Search by guest name or caption..." class="album-search-input" />
+            <select id="albumSortSelect" class="album-sort-select" aria-label="Sort photos">
+              <option value="newest">Newest First</option>
+              <option value="popular">Most Loved ♥</option>
+              <option value="oldest">Oldest First</option>
+            </select>
+            <button type="button" class="btn-sm btn-outline" id="slideshowBtn">▶ Slideshow</button>
+          </div>
+        </div>
+
+        <div id="albumEmptyState" class="album-empty" style="display:none">
+          <div class="album-empty-icon">📸</div>
+          <h3>No photos in this view yet</h3>
+          <p class="muted">Be the first to snap a picture and share a memory with the couple!</p>
+        </div>
+
+        <div class="album-masonry" id="albumGrid"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Fullscreen Photo Lightbox with Download & Navigation -->
+  <div class="lightbox album-lightbox" id="albumLightbox">
+    <button class="close" id="albLbClose" aria-label="Close">&times;</button>
+    <button class="lb-nav lb-prev" id="albLbPrev" aria-label="Previous photo">‹</button>
+    <button class="lb-nav lb-next" id="albLbNext" aria-label="Next photo">›</button>
+    <div class="alb-lb-stage">
+      <img id="albLbImg" src="" alt="" />
+      <div class="alb-lb-meta">
+        <div class="alb-lb-info">
+          <div class="alb-lb-badge" id="albLbCat">Reception</div>
+          <div class="alb-lb-guest" id="albLbGuest">Shared by Guest</div>
+          <div class="alb-lb-caption" id="albLbCaption"></div>
+        </div>
+        <div class="alb-lb-actions">
+          <button type="button" class="alb-lb-btn" id="albLbLikeBtn">♥ <span id="albLbLikes">0</span></button>
+          <a class="alb-lb-btn" id="albLbDownloadBtn" href="#" download>⬇ Save Photo</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Modal for quick phone-to-phone scanning -->
+  <div class="lightbox" id="qrModal">
+    <button class="close" id="qrModalClose" aria-label="Close">&times;</button>
+    <div class="qr-modal-box">
+      <div class="qr-card-ornament">❦</div>
+      <h3>Scan to Join the Wedding Album</h3>
+      <p class="muted" style="font-size:14px;margin:6px 0 16px">Point any phone camera at this QR code to open the shared album and snap photos directly.</p>
+      <div class="qr-card-box" style="margin:0 auto 14px">
+        <img id="modalQrImg" alt="Album QR Code" src="" />
+      </div>
+      <div class="qr-card-url" id="modalQrUrl"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap">
+        <button type="button" class="btn-sm" id="modalDownloadQrBtn">Download QR Sign</button>
+        <button type="button" class="btn-sm btn-outline" id="modalShareBtn">Share Link</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="names" id="footerNames">Astonie &amp; Wanangwa</div>
+      <p id="footerDate">December 6, 2026 · Blantyre, Malawi</p>
+      <div class="links">
+        <a href="/">Home</a>
+        <a href="album">Shared Album</a>
+        <a href="invitation">Invitation</a>
+        <a href="/#rsvp">RSVP</a>
+        <a href="manage">Manage</a>
+      </div>
+      <p id="footerMsg">Thank you for capturing our special day with us.</p>
+      <div class="copyright">© 2026 Astonie &amp; Wanangwa</div>
+    </div>
+  </footer>
+
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="src/js/content.js"></script>
+  <script type="module" src="src/js/album.js"></script>
+</body>
+</html>

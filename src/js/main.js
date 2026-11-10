@@ -1,3 +1,4 @@
+import QRCode from 'qrcode';
 import { supabase } from '../lib/supabase.js';
 import { initMonitoring } from '../lib/monitoring.js';
 initMonitoring('main');
@@ -158,6 +159,34 @@ C.gallery.forEach(src => {
 document.getElementById('lbClose').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
 document.getElementById('lightbox').addEventListener('click', e => { if(e.target.id==='lightbox') e.currentTarget.classList.remove('open'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('lightbox')?.classList.remove('open'); });
+
+// Shared Wedding Album QR & recent preview on homepage
+const homeQrImg = document.getElementById('homeAlbumQrImg');
+const homeQrUrl = document.getElementById('homeAlbumQrUrl');
+if (homeQrImg) {
+  const albumUrl = new URL('album', location.href).toString();
+  if (homeQrUrl) homeQrUrl.textContent = albumUrl.replace(/^https?:\/\//, '');
+  QRCode.toDataURL(albumUrl, { width: 200, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } })
+    .then(u => { homeQrImg.src = u; })
+    .catch(() => { homeQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(albumUrl)}`; });
+}
+const homeAlbumPreview = document.getElementById('homeAlbumPreview');
+if (homeAlbumPreview) {
+  fetch('api/album.php', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      let photos = (j && j.ok && Array.isArray(j.photos)) ? j.photos : [];
+      if (!photos.length) {
+        try { photos = JSON.parse(localStorage.getItem('weddingSharedAlbum') || '[]'); } catch (e) {}
+      }
+      if (photos.length) {
+        const top = photos.slice(0, 4);
+        homeAlbumPreview.innerHTML = `<div class="home-album-thumbs">` +
+          top.map(p => `<a href="album" class="home-album-thumb" title="Shared by ${escapeHtml(p.guest_name || 'Guest')}"><img src="${escapeHtml(p.url)}" alt="" loading="lazy"/></a>`).join('') +
+          `<a href="album" class="home-album-more">+${photos.length} moment${photos.length === 1 ? '' : 's'}</a></div>`;
+      }
+    }).catch(() => {});
+}
 
 // Party
 const partyGrid = document.getElementById('partyGrid');

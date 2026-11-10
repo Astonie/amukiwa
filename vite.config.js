@@ -23,6 +23,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        album: resolve(__dirname, 'album.html'),
         invitation: resolve(__dirname, 'invitation.html'),
         invitationPrint: resolve(__dirname, 'invitation-print.html'),
         invitationPortrait: resolve(__dirname, 'invitation-portrait.html'),

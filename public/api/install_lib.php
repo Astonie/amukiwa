@@ -194,6 +194,19 @@ function wedding_schema_statements(): array
             details TEXT,
             created_at TEXT NOT NULL
         )",
+        "CREATE TABLE IF NOT EXISTS album_photos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            guest_name TEXT NOT NULL DEFAULT 'Guest',
+            caption TEXT DEFAULT '',
+            category TEXT DEFAULT 'Reception',
+            filename TEXT NOT NULL,
+            url TEXT NOT NULL,
+            mime TEXT NOT NULL DEFAULT 'image/jpeg',
+            size INTEGER NOT NULL DEFAULT 0,
+            likes INTEGER NOT NULL DEFAULT 0,
+            approved INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL
+        )",
     ];
 
     if (!$sqlite) {

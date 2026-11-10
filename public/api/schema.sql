@@ -43,3 +43,19 @@ CREATE TABLE IF NOT EXISTS guestbook (
   note TEXT NOT NULL,
   created_at DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS album_photos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  guest_name VARCHAR(120) NOT NULL DEFAULT 'Guest',
+  caption TEXT,
+  category VARCHAR(64) DEFAULT 'Reception',
+  filename VARCHAR(255) NOT NULL,
+  url VARCHAR(512) NOT NULL,
+  mime VARCHAR(128) NOT NULL DEFAULT 'image/jpeg',
+  size INT NOT NULL DEFAULT 0,
+  likes INT NOT NULL DEFAULT 0,
+  approved TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL,
+  INDEX (approved),
+  INDEX (category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

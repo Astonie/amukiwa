@@ -18,6 +18,7 @@ const tabs = [
   { id: 'faq', label: 'FAQ' },
   { id: 'rsvps', label: 'RSVPs' },
   { id: 'guestbook', label: 'Guestbook' },
+  { id: 'album', label: 'Guest Album' },
   { id: 'publish', label: 'Publish' },
   { id: 'settings', label: 'Settings' },
 ];
@@ -182,6 +183,7 @@ function renderAll() {
   renderFaq();
   renderRsvps();
   renderGuestbook();
+  renderAlbumAdmin();
   renderPublish();
   renderSettings();
 }
@@ -513,6 +515,122 @@ async function renderGuestbook() {
       localStorage.removeItem('gb');
     }
     renderGuestbook(); toast('Cleared');
+  });
+}
+
+// Guest Shared Album Moderation
+async function renderAlbumAdmin() {
+  const el = document.getElementById('panel-album');
+  if (!el) return;
+  let photos = [];
+  if (apiAuthed) {
+    try {
+      const r = await fetch('api/album.php?all=1', { credentials: 'same-origin' });
+      if (r.ok) {
+        const j = await r.json();
+        if (j && j.ok && Array.isArray(j.photos)) photos = j.photos;
+      }
+    } catch (e) {}
+  }
+  if (!photos.length) {
+    try { photos = JSON.parse(localStorage.getItem('weddingSharedAlbum') || '[]'); } catch (e) {}
+  }
+  const albumUrl = `${location.origin}/album`;
+  el.innerHTML = `
+    <h2>Shared Wedding Album</h2>
+    <p class="muted" style="margin-bottom:14px">Guests scan the QR code or visit <a href="${escapeAttr(albumUrl)}" target="_blank" style="color:var(--burgundy);text-decoration:underline">${escapeHtml(albumUrl)}</a> to snap &amp; upload photos. You can moderate, download, or promote guest photos to the main couple gallery below.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+      <a class="btn-sm" href="album" target="_blank">Open Shared Album &amp; Table QR</a>
+      ${photos.length ? `<button class="btn-sm btn-outline" id="clearAlbumBtn" type="button">Clear All Guest Photos</button>` : ''}
+    </div>
+    ${!photos.length ? `<p class="muted">No guest photos uploaded yet.</p>` : `<div class="media-grid" id="adminAlbumGrid"></div>`}
+  `;
+  const grid = el.querySelector('#adminAlbumGrid');
+  if (grid) {
+    photos.forEach((p, idx) => {
+      const approved = Number(p.approved ?? 1) === 1;
+      const card = document.createElement('div');
+      card.className = 'media-card';
+      card.style.opacity = approved ? '1' : '0.55';
+      card.innerHTML = `
+        <img src="${escapeAttr(p.url)}" onerror="this.style.opacity=.3">
+        <div style="padding:6px 8px;font-size:11px;line-height:1.35">
+          <div style="font-weight:600;color:var(--burgundy)">${escapeHtml(p.guest_name || 'Guest')}</div>
+          <div class="muted">${escapeHtml(p.category || 'Reception')} · ♥ ${Number(p.likes) || 0}</div>
+          ${p.caption ? `<div style="margin-top:2px;color:var(--ink)">${escapeHtml(p.caption)}</div>` : ''}
+        </div>
+        <div class="actions">
+          <button data-act="promote" data-idx="${idx}" title="Add to Couple Gallery">+Gallery</button>
+          <button data-act="toggle" data-idx="${idx}" title="Show/Hide">${approved ? 'Hide' : 'Show'}</button>
+          <button data-act="del" data-idx="${idx}" title="Delete">✕</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+    grid.querySelectorAll('button').forEach(btn => btn.addEventListener('click', async (e) => {
+      const idx = +e.currentTarget.dataset.idx;
+      const act = e.currentTarget.dataset.act;
+      const item = photos[idx];
+      if (!item) return;
+      if (act === 'promote') {
+        state.gallery = state.gallery || [];
+        if (!state.gallery.includes(item.url)) {
+          state.gallery.unshift(item.url);
+          renderMedia();
+          toast('Added to Couple Gallery (click Save Changes)');
+        } else {
+          toast('Already in Couple Gallery');
+        }
+      } else if (act === 'toggle') {
+        const nextApproved = Number(item.approved ?? 1) === 1 ? 0 : 1;
+        if (apiAuthed && item.id && !String(item.id).startsWith('local-')) {
+          const sess = await apiSession();
+          apiCsrf = sess.csrf || apiCsrf;
+          await fetch('api/album.php?action=toggle_approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'toggle_approve', id: item.id, approved: nextApproved })
+          });
+        }
+        renderAlbumAdmin();
+        toast(nextApproved ? 'Photo visible' : 'Photo hidden');
+      } else if (act === 'del') {
+        if (!confirm('Delete this guest photo?')) return;
+        if (apiAuthed && item.id && !String(item.id).startsWith('local-')) {
+          const sess = await apiSession();
+          apiCsrf = sess.csrf || apiCsrf;
+          await fetch('api/album.php?action=delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ action: 'delete', id: item.id })
+          });
+        } else {
+          const localList = JSON.parse(localStorage.getItem('weddingSharedAlbum') || '[]');
+          localList.splice(idx, 1);
+          localStorage.setItem('weddingSharedAlbum', JSON.stringify(localList));
+        }
+        renderAlbumAdmin();
+        toast('Photo deleted');
+      }
+    }));
+  }
+  el.querySelector('#clearAlbumBtn')?.addEventListener('click', async () => {
+    if (!confirm('Delete ALL guest-uploaded photos from the shared album?')) return;
+    if (apiAuthed) {
+      const sess = await apiSession();
+      apiCsrf = sess.csrf || apiCsrf;
+      await fetch('api/album.php?action=clear_all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ action: 'clear_all' })
+      });
+    }
+    localStorage.removeItem('weddingSharedAlbum');
+    renderAlbumAdmin();
+    toast('Shared album cleared');
   });
 }
 

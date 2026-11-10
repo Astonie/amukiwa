@@ -190,8 +190,10 @@ function run_migrations(): void
         $driver = cfg()['driver'] ?? 'sqlite';
         if ($driver === 'sqlite') {
             db()->exec("CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, action TEXT, entity TEXT, details TEXT, created_at TEXT NOT NULL)");
+            db()->exec("CREATE TABLE IF NOT EXISTS album_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, guest_name TEXT NOT NULL DEFAULT 'Guest', caption TEXT DEFAULT '', category TEXT DEFAULT 'Reception', filename TEXT NOT NULL, url TEXT NOT NULL, mime TEXT NOT NULL DEFAULT 'image/jpeg', size INTEGER NOT NULL DEFAULT 0, likes INTEGER NOT NULL DEFAULT 0, approved INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL)");
         } else {
             db()->exec("CREATE TABLE IF NOT EXISTS audit_log (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64), action VARCHAR(64), entity VARCHAR(64), details TEXT, created_at DATETIME NOT NULL)");
+            db()->exec("CREATE TABLE IF NOT EXISTS album_photos (id INT AUTO_INCREMENT PRIMARY KEY, guest_name VARCHAR(120) NOT NULL DEFAULT 'Guest', caption TEXT, category VARCHAR(64) DEFAULT 'Reception', filename VARCHAR(255) NOT NULL, url VARCHAR(512) NOT NULL, mime VARCHAR(128) NOT NULL DEFAULT 'image/jpeg', size INT NOT NULL DEFAULT 0, likes INT NOT NULL DEFAULT 0, approved TINYINT NOT NULL DEFAULT 1, created_at DATETIME NOT NULL)");
         }
     } catch (Throwable $e) {}
     // Column migrations
