@@ -62,12 +62,6 @@ function init(C) {
 const couple = C.couple;
 const WEDDING_DATE = new Date(couple.dateISO);
 
-// Hamburger
-const ham = document.getElementById('hamburger');
-const mm = document.getElementById('mobileMenu');
-ham?.addEventListener('click', () => mm.classList.toggle('open'));
-mm?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mm.classList.remove('open')));
-
 // Apply couple info
 document.getElementById('navLogo').textContent = couple.groom[0] + ' & ' + couple.bride[0];
 document.getElementById('heroNames').innerHTML = `${couple.groom} <span class="hero-amp">&</span> ${couple.bride}`;
@@ -415,14 +409,25 @@ function toast(msg) {
   t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// scroll progress + back to top
+// scroll progress + back to top + contextual FAB RSVP
 const sp = document.getElementById('scrollProgress');
 const btt = document.getElementById('backToTop');
+const fabRsvp = document.getElementById('fabRsvp');
+const rsvpSection = document.getElementById('rsvp');
 function onScroll() {
   const h = document.documentElement;
-  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  const pct = (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)) * 100;
   if (sp) sp.style.width = pct + '%';
-  if (btt) btt.classList.toggle('show', h.scrollTop > 400);
+  const pastHero = h.scrollTop > 520;
+  if (btt) btt.classList.toggle('show', pastHero);
+  if (fabRsvp) {
+    let inRsvp = false;
+    if (rsvpSection) {
+      const rect = rsvpSection.getBoundingClientRect();
+      inRsvp = rect.top < window.innerHeight * 0.75 && rect.bottom > 120;
+    }
+    fabRsvp.classList.toggle('show', pastHero && !inRsvp);
+  }
 }
 window.addEventListener('scroll', onScroll, { passive: true });
 onScroll();
@@ -430,13 +435,17 @@ if (btt) btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior:
 
 // close mobile menu on link click
 const mm = document.getElementById('mobileMenu');
-if (mm) mm.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mm.classList.remove('open')));
+const ham = document.getElementById('hamburger');
+if (mm) mm.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  mm.classList.remove('open');
+  if (ham) { ham.setAttribute('aria-expanded', 'false'); ham.textContent = '☰'; }
+}));
 
 // hamburger aria
-const ham = document.getElementById('hamburger');
-if (ham) ham.addEventListener('click', () => {
+if (ham && mm) ham.addEventListener('click', () => {
   const open = mm.classList.toggle('open');
   ham.setAttribute('aria-expanded', String(open));
+  ham.textContent = open ? '✕' : '☰';
 });
 
 // Parallax hero content

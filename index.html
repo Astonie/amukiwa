@@ -31,7 +31,7 @@
 
   <nav class="nav">
     <div class="container nav-inner">
-      <a class="logo" href="#home" id="navLogo">A & W</a>
+      <a class="logo" href="#home" id="navLogo">A &amp; W</a>
       <div class="nav-links">
         <a href="#story">Story</a>
         <a href="#details">Details</a>
@@ -41,30 +41,43 @@
         <a href="#rsvp">RSVP</a>
         <a href="#faq">FAQ</a>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <a class="nav-cta" href="album" style="background:linear-gradient(135deg,var(--gold),#a8824a);color:#fff">📸 Guest Album</a>
-        <a class="nav-cta" href="invitation">Invitation</a>
+      <div class="nav-actions">
+        <a class="nav-cta nav-cta-album" href="album">Guest Album</a>
+        <a class="nav-cta nav-cta-primary" href="invitation">Invitation</a>
+        <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">☰</button>
       </div>
-      <button class="hamburger" id="hamburger" aria-label="menu">☰</button>
     </div>
   </nav>
   <div class="mobile-menu" id="mobileMenu">
-    <a href="#story">Story</a><a href="#details">Details</a><a href="#gallery">Gallery</a>
-    <a href="#shared-album">Guest Album</a><a href="album">📸 Open Shared Album</a>
-    <a href="#party">Party</a><a href="#rsvp">RSVP</a><a href="#faq">FAQ</a>
-    <a href="invitation">Invitation</a>
+    <div class="mobile-menu-inner">
+      <div class="mobile-menu-links">
+        <a href="#story">Our Story</a>
+        <a href="#details">Event Details</a>
+        <a href="#gallery">Couple Gallery</a>
+        <a href="#shared-album">Shared Wedding Album</a>
+        <a href="#party">Wedding Party</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="mobile-menu-ctas">
+        <a class="btn btn-primary" href="#rsvp">RSVP Now</a>
+        <a class="btn btn-ghost" href="invitation">View Invitation Card</a>
+        <a class="btn btn-ghost" href="album">📸 Open Shared Guest Album</a>
+      </div>
+    </div>
   </div>
 
   <header class="hero" id="home">
     <div class="hero-content">
       <div class="hero-eyebrow" id="heroEyebrow">We're getting married</div>
-      <h1 class="hero-names" id="heroNames">Astonie <span class="hero-amp">&</span> Wanangwa</h1>
+      <h1 class="hero-names" id="heroNames">Astonie <span class="hero-amp">&amp;</span> Wanangwa</h1>
       <div class="hero-date" id="heroDate">December 6, 2026</div>
       <div class="hero-loc" id="heroLoc">Blantyre, Malawi</div>
       <div class="hero-btns">
-        <a class="btn btn-primary" href="#rsvp">RSVP Now</a>
-        <a class="btn btn-ghost" href="invitation">View Invitation</a>
-        <a class="btn btn-ghost" href="album">📸 Shared Wedding Album</a>
+        <a class="btn btn-primary hero-btn-main" href="#rsvp">RSVP Now</a>
+        <div class="hero-btns-secondary">
+          <a class="btn btn-ghost" href="invitation">Invitation</a>
+          <a class="btn btn-ghost" href="album">Shared Album</a>
+        </div>
       </div>
     </div>
     <div class="scroll-hint">Scroll</div>
@@ -132,7 +145,7 @@
           <div class="badge" style="margin-bottom:12px">Live Guest Photo Wall</div>
           <h3>Help Us Capture Every Beautiful Moment</h3>
           <p class="muted" style="margin:12px 0 22px;font-size:16px">Point your phone camera at the QR code or tap below to take photos directly from your seat and browse pictures shared by everyone at the celebration.</p>
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="home-album-actions">
             <a class="btn btn-primary" href="album?snap=1">📷 Snap &amp; Upload Photos</a>
             <a class="btn btn-ghost" href="album">View Full Shared Album →</a>
           </div>
@@ -230,8 +243,8 @@
   </footer>
 
   <div class="music-player" id="musicPlayer">
-    <button class="music-btn" id="musicBtn" aria-label="play">▶</button>
-    <button class="music-btn" id="playlistBtn" aria-label="playlist" style="bottom:0;right:60px;width:40px;height:40px;font-size:14px">☰</button>
+    <button class="music-btn" id="musicBtn" aria-label="Play or pause music" title="Music">♪</button>
+    <button class="music-btn music-list-toggle" id="playlistBtn" aria-label="Playlist" title="Playlist">☰</button>
     <div class="music-panel" id="musicPanel">
       <div class="embed-holder" id="embedHolder"></div>
       <div class="track-title" id="trackTitle">No track</div>
@@ -246,7 +259,7 @@
   </div>
   <audio id="bgMusic"></audio>
 
-  <a class="fab-rsvp" href="#rsvp">RSVP</a>
+  <a class="fab-rsvp" id="fabRsvp" href="#rsvp">RSVP</a>
   <div class="scroll-progress" id="scrollProgress"></div>
   <button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
   <div class="toast" id="toast"></div>
