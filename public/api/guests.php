@@ -96,6 +96,34 @@ if ($method === 'POST') {
 
     // Public: entrance check-in. A guest must present a valid code to be welcomed in.
     if ($action === 'checkin') {
+        // Lightweight per-IP rate limit to slow brute-force guessing of pass codes.
+        $ip = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $now = time();
+        try {
+            $stmt = db()->prepare('SELECT attempts, window_start FROM checkin_throttle WHERE ip = ?');
+            $stmt->execute([$ip]);
+            $row = $stmt->fetch();
+            $within = $row && ($now - (int)$row['window_start'] < 60);
+            if ($within && (int)$row['attempts'] >= 30) {
+                json_out(['ok' => false, 'error' => 'Too many attempts. Please see the Chief Protocol.'], 429);
+            }
+            if ($within) {
+                db()->prepare('UPDATE checkin_throttle SET attempts = attempts + 1 WHERE ip = ?')->execute([$ip]);
+            } else {
+                $upd = db()->prepare('UPDATE checkin_throttle SET attempts = 1, window_start = ? WHERE ip = ?');
+                $upd->execute([$now, $ip]);
+                if ($upd->rowCount() === 0) {
+                    try {
+                        db()->prepare('INSERT INTO checkin_throttle (ip, attempts, window_start) VALUES (?, 1, ?)')->execute([$ip, $now]);
+                    } catch (Throwable $e) {
+                        db()->prepare('UPDATE checkin_throttle SET attempts = 1, window_start = ? WHERE ip = ?')->execute([$now, $ip]);
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            // If the throttle table is unavailable, continue without blocking verification.
+        }
+
         $guest = find_invited_guest((string)($body['code'] ?? ''));
         if (!$guest) {
             usleep(200000);

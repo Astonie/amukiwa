@@ -209,6 +209,7 @@ function run_migrations(): void
     add_column_if_missing('rsvps', 'last', "TEXT DEFAULT ''");
     add_column_if_missing('rsvps', 'diet', 'TEXT');
     add_column_if_missing('rsvps', 'song', "TEXT DEFAULT ''");
+    try { db()->exec("CREATE TABLE IF NOT EXISTS checkin_throttle (ip VARCHAR(64) PRIMARY KEY, attempts INTEGER NOT NULL DEFAULT 0, window_start INTEGER NOT NULL DEFAULT 0)"); } catch (Throwable $e) {}
     add_column_if_missing('invited_guests', 'checked_in_at', 'DATETIME DEFAULT NULL');
     // content version tracking in meta
     $v = 0;

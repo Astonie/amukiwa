@@ -1331,3 +1331,8 @@ body { animation: pageFadeIn .5s ease; }
 .guest-status-out{background:rgba(107,39,55,.06);color:var(--muted);border:1px solid rgba(107,39,55,.16)}
 .guest-arrival-time{font-size:10px;color:var(--muted);margin-top:2px}
 @media (max-width:700px){.guest-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ACCESSIBILITY */
+:focus-visible { outline: 2px solid var(--burgundy); outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--burgundy); outline-offset: 3px; }
+.skip-link:focus { position: absolute; top: 8px; left: 8px; z-index: 1000; background: #fff; padding: 8px 12px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }

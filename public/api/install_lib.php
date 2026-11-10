@@ -236,6 +236,11 @@ function wedding_schema_statements(): array
             checked_in_at $dateType DEFAULT NULL,
             created_at $dateType NOT NULL
         )",
+        "CREATE TABLE IF NOT EXISTS checkin_throttle (
+            ip VARCHAR(64) PRIMARY KEY,
+            attempts INTEGER NOT NULL DEFAULT 0,
+            window_start INTEGER NOT NULL DEFAULT 0
+        )",
     ];
 
     if (!$sqlite) {
