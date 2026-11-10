@@ -233,6 +233,7 @@ function wedding_schema_statements(): array
             table_no $varchar DEFAULT '',
             note TEXT,
             opened_at $dateType DEFAULT NULL,
+            checked_in_at $dateType DEFAULT NULL,
             created_at $dateType NOT NULL
         )",
     ];

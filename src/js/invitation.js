@@ -131,11 +131,11 @@ function renderVerificationQr() {
   const caption = document.getElementById('qrCaption');
   if (!qr) return;
   if (verifiedGuest?.code) {
-    const verifyUrl = `${location.origin}/invitation?code=${encodeURIComponent(verifiedGuest.code)}`;
+    const verifyUrl = `${location.origin}/checkin?code=${encodeURIComponent(verifiedGuest.code)}`;
     QRCode.toDataURL(verifyUrl, { width: 180, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } })
-      .then(url => { qr.src = url; })
+      .then(url => { qr.src = url; qr.alt = 'Entrance check-in QR code'; })
       .catch(e => { console.error('QR gen failed', e); });
-    if (caption) caption.textContent = 'Scan at entrance to verify this invitation';
+    if (caption) caption.textContent = 'Scan at the entrance to check in';
   } else {
     const mapUrl = 'https://www.google.com/maps/search/?api=1&query=Golden+Peacock+Hotel+Blantyre+Malawi';
     QRCode.toDataURL(mapUrl, { width: 160, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } })

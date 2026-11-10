@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Entrance Check-In — Astonie &amp; Wanangwa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <meta name="theme-color" content="#6b2737" />
+</head>
+<body class="checkin-page">
+  <main class="checkin-shell">
+    <header class="checkin-brand">
+      <div class="checkin-monogram">A &amp; W</div>
+      <div class="checkin-event">Astonie &amp; Wanangwa</div>
+      <div class="checkin-sub">Chimanyano Celebration · Entrance verification</div>
+    </header>
+
+    <section class="checkin-card" id="ciLoading" hidden aria-live="polite">
+      <div class="checkin-spinner" aria-hidden="true"></div>
+      <p class="checkin-eyebrow">Verifying invitation</p>
+      <h1 class="checkin-title">One moment…</h1>
+      <p class="checkin-text">Checking this invitation against our guest list.</p>
+    </section>
+
+    <section class="checkin-card checkin-card-valid" id="ciValid" hidden aria-live="polite">
+      <div class="checkin-badge checkin-badge-valid" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <p class="checkin-eyebrow checkin-eyebrow-valid">Entry granted</p>
+      <h1 class="checkin-title checkin-title-valid" id="ciWelcome">Welcome</h1>
+      <p class="checkin-name" id="ciName"></p>
+      <div class="checkin-meta" id="ciMeta"></div>
+      <p class="checkin-note" id="ciNote" hidden></p>
+      <p class="checkin-arrival" id="ciArrival" hidden></p>
+      <p class="checkin-fine">Please proceed to your table and enjoy the celebration.</p>
+      <button class="checkin-btn checkin-btn-solid" id="ciNext" type="button">Verify next guest</button>
+    </section>
+
+    <section class="checkin-card checkin-card-invalid" id="ciInvalid" hidden aria-live="polite">
+      <div class="checkin-badge checkin-badge-invalid" aria-hidden="true">!</div>
+      <p class="checkin-eyebrow checkin-eyebrow-invalid">Not verified</p>
+      <h1 class="checkin-title">Please see the Chief Protocol</h1>
+      <p class="checkin-text">This invitation could not be verified against our guest list. Kindly speak with the Chief Protocol before entering — they will assist you.</p>
+      <p class="checkin-ref" id="ciRef" hidden></p>
+      <button class="checkin-btn checkin-btn-outline" id="ciRetry" type="button">Try another invitation</button>
+    </section>
+
+    <section class="checkin-card checkin-card-offline" id="ciOffline" hidden aria-live="polite">
+      <div class="checkin-badge checkin-badge-invalid" aria-hidden="true">!</div>
+      <p class="checkin-eyebrow checkin-eyebrow-invalid">Verification unavailable</p>
+      <h1 class="checkin-title">Please see the Chief Protocol</h1>
+      <p class="checkin-text">We cannot reach the guest list right now. The Chief Protocol will verify your invitation and welcome you in.</p>
+      <button class="checkin-btn checkin-btn-outline" id="ciRetryOffline" type="button">Try again</button>
+    </section>
+
+    <section class="checkin-card" id="ciIdle" hidden>
+      <p class="checkin-eyebrow">Entrance check-in</p>
+      <h1 class="checkin-title">Verify an invitation</h1>
+      <p class="checkin-text">Scan the QR code on the guest’s invitation, or enter the invitation code below.</p>
+      <form class="checkin-form" id="ciCodeForm">
+        <input id="ciCodeInput" placeholder="e.g. AW-7K4M9P2X" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Invitation code" />
+        <button class="checkin-btn checkin-btn-solid" type="submit">Verify</button>
+      </form>
+      <p class="checkin-error" id="ciIdleError" hidden></p>
+    </section>
+
+    <footer class="checkin-foot">
+      <span>December 6, 2026 · Golden Peacock Hotel, Blantyre</span>
+      <span class="checkin-foot-note">For protocol use at the entrance</span>
+    </footer>
+  </main>
+
+  <script type="module" src="src/js/checkin.js"></script>
+</body>
+</html>

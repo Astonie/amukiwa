@@ -28,6 +28,7 @@ export default defineConfig({
         invitationPrint: resolve(__dirname, 'invitation-print.html'),
         invitationPortrait: resolve(__dirname, 'invitation-portrait.html'),
         invitationLandscape: resolve(__dirname, 'invitation-landscape.html'),
+        checkin: resolve(__dirname, 'checkin.html'),
         manage: resolve(__dirname, 'manage.html'),
       },
     },

@@ -6,3 +6,6 @@ dist/
 /uploads/
 .env
 .env.local
+
+# deploy artifact
+wedding-hostinger-upload.zip

@@ -193,13 +193,13 @@ function run_migrations(): void
             db()->exec("CREATE TABLE IF NOT EXISTS album_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, guest_name TEXT NOT NULL DEFAULT 'Guest', caption TEXT DEFAULT '', category TEXT DEFAULT 'Reception', filename TEXT NOT NULL, url TEXT NOT NULL, mime TEXT NOT NULL DEFAULT 'image/jpeg', size INTEGER NOT NULL DEFAULT 0, likes INTEGER NOT NULL DEFAULT 0, approved INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL)");
             db()->exec("CREATE TABLE IF NOT EXISTS schedule_items (id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT, title TEXT, note TEXT, sort_order INTEGER DEFAULT 0)");
             db()->exec("CREATE TABLE IF NOT EXISTS dress_code (id TINYINT PRIMARY KEY, style TEXT, subtitle TEXT, note TEXT)");
-            db()->exec("CREATE TABLE IF NOT EXISTS invited_guests (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, phone TEXT DEFAULT '', max_guests INTEGER NOT NULL DEFAULT 1, table_no TEXT DEFAULT '', note TEXT DEFAULT '', opened_at TEXT DEFAULT NULL, created_at TEXT NOT NULL)");
+            db()->exec("CREATE TABLE IF NOT EXISTS invited_guests (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, phone TEXT DEFAULT '', max_guests INTEGER NOT NULL DEFAULT 1, table_no TEXT DEFAULT '', note TEXT DEFAULT '', opened_at TEXT DEFAULT NULL, checked_in_at TEXT DEFAULT NULL, created_at TEXT NOT NULL)");
         } else {
             db()->exec("CREATE TABLE IF NOT EXISTS audit_log (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64), action VARCHAR(64), entity VARCHAR(64), details TEXT, created_at DATETIME NOT NULL)");
             db()->exec("CREATE TABLE IF NOT EXISTS album_photos (id INT AUTO_INCREMENT PRIMARY KEY, guest_name VARCHAR(120) NOT NULL DEFAULT 'Guest', caption TEXT, category VARCHAR(64) DEFAULT 'Reception', filename VARCHAR(255) NOT NULL, url VARCHAR(512) NOT NULL, mime VARCHAR(128) NOT NULL DEFAULT 'image/jpeg', size INT NOT NULL DEFAULT 0, likes INT NOT NULL DEFAULT 0, approved TINYINT NOT NULL DEFAULT 1, created_at DATETIME NOT NULL)");
             db()->exec("CREATE TABLE IF NOT EXISTS schedule_items (id INT AUTO_INCREMENT PRIMARY KEY, time VARCHAR(64), title VARCHAR(255), note TEXT, sort_order INT DEFAULT 0)");
             db()->exec("CREATE TABLE IF NOT EXISTS dress_code (id TINYINT PRIMARY KEY, style VARCHAR(120), subtitle VARCHAR(255), note TEXT)");
-            db()->exec("CREATE TABLE IF NOT EXISTS invited_guests (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(160) NOT NULL, phone VARCHAR(40) DEFAULT '', max_guests INT NOT NULL DEFAULT 1, table_no VARCHAR(40) DEFAULT '', note TEXT, opened_at DATETIME DEFAULT NULL, created_at DATETIME NOT NULL)");
+            db()->exec("CREATE TABLE IF NOT EXISTS invited_guests (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(160) NOT NULL, phone VARCHAR(40) DEFAULT '', max_guests INT NOT NULL DEFAULT 1, table_no VARCHAR(40) DEFAULT '', note TEXT, opened_at DATETIME DEFAULT NULL, checked_in_at DATETIME DEFAULT NULL, created_at DATETIME NOT NULL)");
         }
     } catch (Throwable $e) {}
     // Column migrations
@@ -209,6 +209,7 @@ function run_migrations(): void
     add_column_if_missing('rsvps', 'last', "TEXT DEFAULT ''");
     add_column_if_missing('rsvps', 'diet', 'TEXT');
     add_column_if_missing('rsvps', 'song', "TEXT DEFAULT ''");
+    add_column_if_missing('invited_guests', 'checked_in_at', 'DATETIME DEFAULT NULL');
     // content version tracking in meta
     $v = 0;
     try {

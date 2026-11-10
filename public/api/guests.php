@@ -23,26 +23,41 @@ function generate_invite_code(): string
     return 'AW-' . $part1 . $part2;
 }
 
+function normalize_invite_code(string $code): array
+{
+    $clean = (string)preg_replace('/[^A-Z0-9]/', '', strtoupper(trim($code)));
+    if ($clean === '') {
+        return ['', ''];
+    }
+    // Accept both AW-XXXXXXXX and XXXXXXXX.
+    if (strpos($clean, 'AW') === 0 && strlen($clean) > 4) {
+        return ['AW-' . substr($clean, 2), $clean];
+    }
+    return ['AW-' . $clean, $clean];
+}
+
+function find_invited_guest(string $code): ?array
+{
+    [$normalized, $clean] = normalize_invite_code($code);
+    if ($clean === '') {
+        return null;
+    }
+    $stmt = db()->prepare('SELECT id, code, name, max_guests, table_no, note, opened_at, checked_in_at, created_at FROM invited_guests WHERE UPPER(code) = ? OR UPPER(REPLACE(code, "-", "")) = ? LIMIT 1');
+    $stmt->execute([$normalized, $clean]);
+    $guest = $stmt->fetch();
+    return $guest ?: null;
+}
+
 if ($method === 'GET') {
-    $code = strtoupper(trim((string)($_GET['code'] ?? '')));
+    $code = (string)($_GET['code'] ?? '');
 
     // Public verification lookup by code
-    if ($code !== '') {
-        // Normalize code: allow both AW-XXXXYYYY and XXXXYYYY
-        $clean = preg_replace('/[^A-Z0-9]/', '', $code);
-        if (strpos($clean, 'AW') === 0 && strlen($clean) > 4) {
-            $normalized = 'AW-' . substr($clean, 2);
-        } else {
-            $normalized = 'AW-' . $clean;
-        }
-
-        $stmt = db()->prepare('SELECT id, code, name, max_guests, table_no, note, opened_at FROM invited_guests WHERE UPPER(code) = ? OR UPPER(REPLACE(code, "-", "")) = ? LIMIT 1');
-        $stmt->execute([$normalized, $clean]);
-        $guest = $stmt->fetch();
+    if (trim($code) !== '') {
+        $guest = find_invited_guest($code);
 
         if (!$guest) {
             usleep(200000);
-            json_out(['ok' => false, 'error' => 'Invalid invitation code. Please check your personal link or invitation code.'], 404);
+            json_out(['ok' => false, 'error' => 'Invitation not recognised. Please see the Chief Protocol.'], 404);
         }
 
         // Record first open timestamp
@@ -63,10 +78,38 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST') {
-    require_auth();
-    check_csrf();
     $body = json_body();
     $action = (string)($body['action'] ?? ($_GET['action'] ?? 'create'));
+
+    // Public: entrance check-in. A guest must present a valid code to be welcomed in.
+    if ($action === 'checkin') {
+        $guest = find_invited_guest((string)($body['code'] ?? ''));
+        if (!$guest) {
+            usleep(200000);
+            json_out(['ok' => false, 'error' => 'Invitation not recognised. Please see the Chief Protocol.'], 404);
+        }
+
+        $already = !empty($guest['checked_in_at']);
+        if (!$already) {
+            $now = gmdate('Y-m-d H:i:s');
+            db()->prepare('UPDATE invited_guests SET checked_in_at = ? WHERE id = ? AND checked_in_at IS NULL')->execute([$now, $guest['id']]);
+            $guest = find_invited_guest($guest['code']) ?: $guest;
+        }
+
+        json_out(['ok' => true, 'guest' => $guest, 'already_checked_in' => $already]);
+    }
+
+    require_auth();
+    check_csrf();
+
+    if ($action === 'uncheck') {
+        $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
+        if ($id <= 0) {
+            json_out(['error' => 'Invalid guest id'], 400);
+        }
+        db()->prepare('UPDATE invited_guests SET checked_in_at = NULL WHERE id = ?')->execute([$id]);
+        json_out(['ok' => true]);
+    }
 
     if ($action === 'delete') {
         $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
@@ -79,6 +122,11 @@ if ($method === 'POST') {
 
     if ($action === 'clear_all') {
         db()->exec('DELETE FROM invited_guests');
+        json_out(['ok' => true]);
+    }
+
+    if ($action === 'reset_checkins') {
+        db()->exec('UPDATE invited_guests SET checked_in_at = NULL');
         json_out(['ok' => true]);
     }
 
@@ -121,6 +169,7 @@ if ($method === 'POST') {
         'table_no' => $tableNo,
         'note' => $note,
         'opened_at' => null,
+        'checked_in_at' => null,
         'created_at' => $now,
     ];
 

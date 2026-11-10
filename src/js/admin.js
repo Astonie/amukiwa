@@ -494,13 +494,23 @@ async function renderGuests() {
   const c = state.couple || {};
   const buildMessage = (g) => {
     const url = `${location.origin}/invitation?code=${encodeURIComponent(g.code)}`;
-    return `Dear ${g.name},\n\nTogether with our families, we joyfully invite you to our Chimanyano Celebration (${c.groom} & ${c.bride}) on ${c.dateDisplay} at ${c.venue}, ${c.location}.\n\nTap below to open your personal wedding invitation card & RSVP:\n${url}`;
+    return `Dear ${g.name},\n\nTogether with our families, we joyfully invite you to our Chimanyano Celebration (${c.groom} & ${c.bride}) on ${c.dateDisplay} at ${c.venue}, ${c.location}.\n\nTap below to open your personal wedding invitation card. At the entrance, simply present the QR code on your invitation for a seamless check-in:\n${url}`;
   };
   const guestLink = (g) => `${location.origin}/invitation?code=${encodeURIComponent(g.code)}`;
+  const totalSeats = guests.reduce((sum, g) => sum + Math.max(1, Number(g.max_guests) || 1), 0);
+  const checkedIn = guests.filter((g) => !!g.checked_in_at).length;
+  const searchTerm = document.getElementById('guestSearch')?.value || '';
 
   el.innerHTML = `
     <h2>Invited Guests &amp; Personal Passes</h2>
-    <p class="muted" style="font-size:13px;margin-bottom:18px">Every guest or family gets a unique, unguessable invitation code. Only a valid code can personalise and open the invitation card, so guests cannot unlock an invitation by editing the URL.</p>
+    <p class="muted" style="font-size:13px;margin-bottom:18px">Every guest or family gets a unique, unguessable invitation code. Their invitation QR opens the entrance check-in screen: a valid pass is welcomed instantly, while anything else is directed to the Chief Protocol.</p>
+
+    <div class="guest-stats">
+      <div class="guest-stat"><strong>${guests.length}</strong><span>Guest passes</span></div>
+      <div class="guest-stat"><strong>${totalSeats}</strong><span>Seats reserved</span></div>
+      <div class="guest-stat"><strong>${checkedIn}</strong><span>Checked in</span></div>
+      <div class="guest-stat"><strong>${Math.max(0, guests.length - checkedIn)}</strong><span>Not yet arrived</span></div>
+    </div>
 
     <div class="list-item" style="margin-bottom:22px">
       <div class="row">
@@ -511,18 +521,25 @@ async function renderGuests() {
         <div class="field"><label>Reserved seats</label><input id="g_seats" type="number" min="1" value="1"></div>
         <div class="field"><label>Table number (optional)</label><input id="g_table" placeholder="e.g. 4"></div>
       </div>
-      <div class="field"><label>Private note (optional)</label><input id="g_note" placeholder="e.g. VIP family seating"></div>
+      <div class="field"><label>Entrance note (optional)</label><input id="g_note" placeholder="e.g. VIP family seating, wheelchair access"></div>
       <button class="btn-sm" id="createGuestBtn" type="button">+ Create Guest Pass</button>
     </div>
 
     ${guests.length ? `
+      <div class="guest-toolbar">
+        <input id="guestSearch" type="search" placeholder="Search guest name or code…" value="${escapeAttr(searchTerm)}" aria-label="Search invited guests">
+        <a class="btn-sm btn-outline" href="/checkin" target="_blank" rel="noopener">Open Entrance Desk</a>
+      </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Guest</th><th>Code</th><th>Seats / Table</th><th>First opened</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Guest</th><th>Code</th><th>Seats / Table</th><th>Arrival</th><th>Actions</th></tr></thead>
           <tbody id="guestsBody"></tbody>
         </table>
       </div>
-      <div style="margin-top:14px"><button class="btn-sm btn-outline" id="clearGuestsBtn" type="button">Delete all guest passes</button></div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-sm btn-outline" id="resetCheckinsBtn" type="button">Reset all arrivals</button>
+        <button class="btn-sm btn-outline" id="clearGuestsBtn" type="button">Delete all guest passes</button>
+      </div>
     ` : `<p class="muted">No guest passes yet. Add your first guest above.</p>`}
   `;
 
@@ -562,21 +579,36 @@ async function renderGuests() {
 
   const tbody = document.getElementById('guestsBody');
   if (tbody) {
+    const fmtTs = (v) => v ? new Date(String(v).replace(' ', 'T') + 'Z').toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
     guests.forEach(g => {
       const tr = document.createElement('tr');
-      const opened = g.opened_at ? new Date(String(g.opened_at).replace(' ', 'T') + 'Z').toLocaleString() : '—';
+      tr.dataset.search = `${g.name || ''} ${g.code || ''} ${g.table_no || ''}`.toLowerCase();
+      const checked = !!g.checked_in_at;
+      const arrival = checked
+        ? `<span class="guest-status guest-status-in">Checked in</span><div class="guest-arrival-time">${escapeHtml(fmtTs(g.checked_in_at))}</div>`
+        : `<span class="guest-status guest-status-out">Not yet</span>`;
       tr.innerHTML = `
         <td><strong>${escapeHtml(g.name)}</strong>${g.note ? `<div class="muted" style="font-size:11px">${escapeHtml(g.note)}</div>` : ''}</td>
         <td><code style="font-size:12px;letter-spacing:.06em">${escapeHtml(g.code)}</code></td>
         <td>${escapeHtml(String(g.max_guests || 1))} seat${Number(g.max_guests) === 1 ? '' : 's'}${g.table_no ? ` · Table ${escapeHtml(g.table_no)}` : ''}</td>
-        <td class="muted" style="font-size:12px">${escapeHtml(opened)}</td>
+        <td>${arrival}</td>
         <td style="white-space:nowrap">
           <button class="btn-sm btn-outline" data-act="copy" data-id="${escapeAttr(g.id)}" type="button">Copy Link</button>
           <button class="btn-sm" data-act="wa" data-id="${escapeAttr(g.id)}" type="button" style="background:#25D366">WhatsApp</button>
+          ${checked ? `<button class="btn-sm btn-outline" data-act="uncheck" data-id="${escapeAttr(g.id)}" type="button">Undo Entry</button>` : ''}
           <button class="btn-sm btn-outline" data-act="del" data-id="${escapeAttr(g.id)}" type="button">Delete</button>
         </td>`;
       tbody.appendChild(tr);
     });
+
+    const applyGuestFilter = () => {
+      const q = (document.getElementById('guestSearch')?.value || '').trim().toLowerCase();
+      tbody.querySelectorAll('tr').forEach(tr => {
+        tr.style.display = !q || (tr.dataset.search || '').includes(q) ? '' : 'none';
+      });
+    };
+    document.getElementById('guestSearch')?.addEventListener('input', applyGuestFilter);
+    applyGuestFilter();
 
     tbody.querySelectorAll('button[data-act]').forEach(btn => btn.addEventListener('click', async () => {
       const g = guests.find(x => String(x.id) === String(btn.dataset.id));
@@ -590,6 +622,20 @@ async function renderGuests() {
         const msg = buildMessage(g);
         const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
         window.open(waUrl, '_blank', 'noopener');
+      } else if (act === 'uncheck') {
+        if (!confirm(`Remove the arrival record for ${g.name}?`)) return;
+        try {
+          const sess = await apiSession(); apiCsrf = sess.csrf || apiCsrf;
+          const r = await fetch('api/guests.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+            body: JSON.stringify({ action: 'uncheck', id: g.id }),
+          });
+          const j = await r.json().catch(() => null);
+          if (r.ok && j && j.ok) { toast('Arrival record removed'); renderGuests(); }
+          else alert((j && j.error) || 'Could not remove the arrival record.');
+        } catch (e) { alert('Network error while updating the arrival record.'); }
       } else if (act === 'del') {
         if (!confirm(`Delete the guest pass for ${g.name}? Their invitation link will stop working.`)) return;
         try {
@@ -607,6 +653,22 @@ async function renderGuests() {
       }
     }));
   }
+
+  document.getElementById('resetCheckinsBtn')?.addEventListener('click', async () => {
+    if (!confirm('Reset all arrival records? Guest passes and invitation links stay active.')) return;
+    try {
+      const sess = await apiSession(); apiCsrf = sess.csrf || apiCsrf;
+      const r = await fetch('api/guests.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+        body: JSON.stringify({ action: 'reset_checkins' }),
+      });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j && j.ok) { toast('All arrival records reset'); renderGuests(); }
+      else alert((j && j.error) || 'Could not reset arrivals.');
+    } catch (e) { alert('Network error while resetting arrivals.'); }
+  });
 
   document.getElementById('clearGuestsBtn')?.addEventListener('click', async () => {
     if (!confirm('Delete ALL guest passes? Every personal invitation link will stop working.')) return;
