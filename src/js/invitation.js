@@ -55,16 +55,21 @@ const couple = C.couple;
 const params = new URLSearchParams(location.search);
 const guest = params.get('to') || params.get('guest') || '';
 const guestLine = document.getElementById('guestLine');
-if (guest) guestLine.textContent = `Dear ${decodeURIComponent(guest)},`;
+if (guest && guestLine) guestLine.textContent = `Dear ${decodeURIComponent(guest)},`;
 
-document.getElementById('invNames').textContent = `${couple.groom} & ${couple.bride}`;
-document.getElementById('invDate').textContent = couple.dateDisplay;
+const invNamesEl = document.getElementById('invNames');
+if (invNamesEl) invNamesEl.textContent = `${couple.groom} & ${couple.bride}`;
+const invDateEl = document.getElementById('invDate');
+if (invDateEl) invDateEl.textContent = couple.dateDisplay;
 const inv = C.invitation || {};
-if (inv.eyebrow) document.getElementById('invEyebrow').textContent = inv.eyebrow;
-if (inv.rsvpText) document.getElementById('invRsvpBtn').textContent = inv.rsvpText;
+const invEyebrowEl = document.getElementById('invEyebrow');
+if (inv.eyebrow && invEyebrowEl) invEyebrowEl.textContent = inv.eyebrow;
+const invRsvpBtnEl = document.getElementById('invRsvpBtn');
+if (inv.rsvpText && invRsvpBtnEl) invRsvpBtnEl.textContent = inv.rsvpText;
 document.title = `You're Invited — ${couple.groom} & ${couple.bride}`;
-const d0 = C.details[0], d1 = C.details[1] || C.details[0];
-document.getElementById('invVenue').innerHTML = `${d1.title} ${d1.time} · ${d1.place}`;
+const d0 = C.details?.[0], d1 = C.details?.[1] || d0;
+const invVenueEl = document.getElementById('invVenue');
+if (d1 && invVenueEl) invVenueEl.innerHTML = `${d1.title} ${d1.time} · ${d1.place}`;
 
 const envelope = document.getElementById('envelope');
 const envWrap = document.getElementById('envWrap');
@@ -89,7 +94,12 @@ function openEnvelope() {
   }, 900);
 }
 envWrap.addEventListener('click', openEnvelope);
-setTimeout(openEnvelope, 1200);
+envWrap.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    openEnvelope();
+  }
+});
 
 const inviteUrl = location.href;
 
