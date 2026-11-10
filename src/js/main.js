@@ -44,7 +44,7 @@ async function loadContent() {
 setTimeout(() => { const p = document.getElementById('preloader'); if (p) { p.classList.add('done'); p.style.display = 'none'; } }, 4000);
 
 loadContent().then(C => {
-  try { init(C); import('./scene3d.js').then(m => m.initScene3D()).catch(()=>{}); }
+  try { init(C); if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) import('./scene3d.js').then(m => m.initScene3D()).catch(()=>{}); }
   catch (e) {
     console.error('Site init failed', e);
     const pre = document.getElementById('preloader');
@@ -164,7 +164,7 @@ if (scheduleList && Array.isArray(C.schedule)) {
 const gg = document.getElementById('galleryGrid');
 C.gallery.forEach(src => {
   const d = document.createElement('div'); d.className='g';
-  const img = document.createElement('img'); img.loading='lazy';
+  const img = document.createElement('img'); img.loading='lazy'; img.decoding='async'; img.sizes='(max-width: 768px) 50vw, 33vw';
   const webp = src.replace(/\.(jpe?g|png)$/i, '.webp');
   img.src = webp;
   img.onerror = () => { img.onerror = null; img.src = src; };
@@ -250,7 +250,7 @@ document.getElementById('rsvpForm').addEventListener('submit', async e => {
     try {
       await fetch('api/rsvp.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     } catch (e) {}
-    launchConfetti();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) launchConfetti();
     form.reset();
     toast('Thank you! Your RSVP has been received.');
   } finally {
@@ -396,6 +396,7 @@ window.launchConfetti = launchConfetti;
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function launchConfetti() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const c = document.getElementById('confetti');
   const ctx = c.getContext('2d');
   c.width = innerWidth; c.height = innerHeight;

@@ -163,6 +163,8 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 });
 
 function initAdmin() {
+  const dark = localStorage.getItem('adminDarkMode') === '1';
+  document.body.classList.toggle('admin-dark', dark);
   const sideNav = document.getElementById('sideNav');
   const panelsEl = document.getElementById('panels');
   tabs.forEach(t => {
@@ -174,6 +176,16 @@ function initAdmin() {
   });
   activate('dashboard');
   renderAll();
+  const darkBtn = document.getElementById('darkModeBtn');
+  if (darkBtn) {
+    darkBtn.textContent = document.body.classList.contains('admin-dark') ? 'Light mode' : 'Dark mode';
+    darkBtn.addEventListener('click', () => {
+      const on = !document.body.classList.contains('admin-dark');
+      document.body.classList.toggle('admin-dark', on);
+      localStorage.setItem('adminDarkMode', on ? '1' : '0');
+      darkBtn.textContent = on ? 'Light mode' : 'Dark mode';
+    });
+  }
   if (mustChangePassword) {
     const banner = document.getElementById('passwordBanner');
     if (banner) banner.hidden = false;
@@ -551,6 +563,8 @@ async function renderGuests() {
         <input id="guestSearch" type="search" placeholder="Search guest name or code…" value="${escapeAttr(searchTerm)}" aria-label="Search invited guests">
         <a class="btn-sm btn-outline" href="/checkin" target="_blank" rel="noopener">Open Entrance Desk</a>
         <button class="btn-sm btn-outline" id="exportGuestsBtn" type="button">Export CSV</button>
+        <button class="btn-sm btn-outline" id="exportArrivalsBtn" type="button">Export Arrivals</button>
+        <button class="btn-sm btn-outline" id="printTableCardsBtn" type="button">Print Table Cards</button>
       </div>
       <div style="overflow-x:auto">
         <table>
@@ -744,6 +758,55 @@ async function renderGuests() {
     const a = document.createElement('a'); a.href = url; a.download = 'invited-guests.csv'; a.click();
     URL.revokeObjectURL(url);
     toast('Guest list exported');
+  });
+  document.getElementById('exportArrivalsBtn')?.addEventListener('click', () => {
+    const arrived = guests.filter(g => !!g.checked_in_at);
+    if (!arrived.length) { alert('No arrivals recorded yet.'); return; }
+    const csv = ['Code,Name,Seats,Table,Checked In At'].concat(arrived.map(g =>
+      `"${g.code}","${String(g.name||'').replace(/"/g,'""')}",${Number(g.max_guests)||1},"${String(g.table_no||'').replace(/"/g,'""')}","${g.checked_in_at}"`
+    )).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'checkins.csv'; a.click();
+    URL.revokeObjectURL(url);
+    toast('Arrivals exported');
+  });
+  document.getElementById('printTableCardsBtn')?.addEventListener('click', async () => {
+    const tables = [...new Set(guests.map(g => String(g.table_no || '').trim()).filter(Boolean))]
+      .sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
+    if (!tables.length) { alert('No table numbers have been assigned yet.'); return; }
+    let QRCode;
+    try { QRCode = (await import('qrcode')).default; } catch (e) { alert('Could not load the QR generator.'); return; }
+    const cards = await Promise.all(tables.map(async (table) => {
+      const url = `${location.origin}/album`;
+      const qr = await QRCode.toDataURL(url, { width: 180, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } });
+      return `<div class="table-card">
+        <div class="table-card-eyebrow">Table</div>
+        <div class="table-card-number">${escapeHtml(table)}</div>
+        <img src="${qr}" alt="QR code for the shared album" />
+        <div class="table-card-caption">Scan to open the shared wedding album</div>
+      </div>`;
+    }));
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Table Cards</title>
+      <style>
+        body { font-family: 'Inter', 'Helvetica Neue', sans-serif; margin: 0; padding: 24px; background: #fff; color: #2a2420; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
+        .table-card { border: 1px solid #e9ddc9; border-radius: 16px; padding: 24px 18px; text-align: center; page-break-inside: avoid; }
+        .table-card-eyebrow { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: #5a5249; margin-bottom: 4px; }
+        .table-card-number { font-family: 'Cormorant Garamond', serif; font-size: 56px; line-height: 1; color: #6b2737; margin-bottom: 12px; }
+        .table-card img { width: 150px; height: 150px; margin: 0 auto; }
+        .table-card-caption { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #5a5249; margin-top: 10px; }
+        @media print { body { padding: 12px; } }
+      </style></head><body>
+      <h1 style="font-family:'Cormorant Garamond',serif;color:#6b2737;margin:0 0 20px">Table Cards — Astonie &amp; Wanangwa</h1>
+      <div class="grid">${cards.join('')}</div>
+      <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };</script>
+      </body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) { alert('Please allow pop-ups to print table cards.'); return; }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
   });
 }
 

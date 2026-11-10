@@ -27,6 +27,18 @@
     .password-banner{background:#fbeee8;border:1px solid #e8b7a8;color:#8a3a2a;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600}
     .topbar h1{font-size:32px;color:var(--burgundy)}
     .topbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+    /* Dark mode */
+    body.admin-dark { background: #12100e; color: #e8e1d6; }
+    body.admin-dark .admin-app .main { background: #12100e; }
+    body.admin-dark .sidebar { background: #0b0907; }
+    body.admin-dark .panel, body.admin-dark .list-item { background: #1e1a15; border-color: #3a342c; color: #e8e1d6; }
+    body.admin-dark .field input, body.admin-dark .field select, body.admin-dark .field textarea, body.admin-dark .guest-toolbar input { background: #16120e; color: #e8e1d6; border-color: #3a342c; }
+    body.admin-dark .topbar h1 { color: #c9a961; }
+    body.admin-dark table th, body.admin-dark table td { color: #e8e1d6; border-color: #3a342c; }
+    body.admin-dark .btn-sm.btn-outline { color: #e8e1d6; border-color: #3a342c; background: #1e1a15; }
+    body.admin-dark .muted { color: #b8ad9c; }
+    body.admin-dark .stat-pill, body.admin-dark .guest-stat { background: #1e1a15; border-color: #3a342c; }
+    body.admin-dark .guest-stat strong { color: #c9a961; }
     .panel{display:none;background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
     .panel.active{display:block}
     .panel h2{font-size:26px;color:var(--burgundy);margin-bottom:18px}
@@ -85,6 +97,7 @@
         <div class="topbar">
           <h1 id="panelTitle">Dashboard</h1>
           <div class="actions">
+            <button class="btn-sm btn-outline" id="darkModeBtn" type="button">Dark mode</button>
             <a class="btn-sm btn-outline" href="/?preview=1" target="_blank">Preview Site</a>
             <button class="btn-sm" id="saveBtn">Save Changes</button>
           </div>

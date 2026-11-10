@@ -1336,3 +1336,10 @@ body { animation: pageFadeIn .5s ease; }
 :focus-visible { outline: 2px solid var(--burgundy); outline-offset: 3px; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--burgundy); outline-offset: 3px; }
 .skip-link:focus { position: absolute; top: 8px; left: 8px; z-index: 1000; background: #fff; padding: 8px 12px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+
+/* REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  .preloader, .ring { animation: none !important; }
+  canvas#confetti { display: none !important; }
+}

@@ -162,7 +162,7 @@ function openEnvelope() {
   setTimeout(() => {
     envelopeStage.style.display = 'none';
     cardStage.style.display = 'block';
-    launchConfetti();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) launchConfetti();
     renderVerificationQr();
   }, 900);
 }
@@ -243,6 +243,7 @@ document.getElementById('calBtn')?.addEventListener('click', () => {
 });
 
 function launchConfetti() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const c = document.getElementById('confetti');
   const ctx = c.getContext('2d');
   c.width = innerWidth; c.height = innerHeight;

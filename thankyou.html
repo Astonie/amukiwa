@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank You — Astonie &amp; Wanangwa</title>
+  <meta name="description" content="Thank you for celebrating with Astonie and Wanangwa." />
+  <meta name="robots" content="index, follow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/css/styles.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#6b2737" />
+</head>
+<body>
+  <main class="invite-page">
+    <div class="container" style="max-width:640px;text-align:center;padding:80px 24px">
+      <div class="badge" style="margin-bottom:18px">Thank You</div>
+      <h1 class="section-title" style="margin-bottom:12px">Astonie &amp; Wanangwa</h1>
+      <p class="section-sub" style="margin-bottom:24px">Thank you for celebrating our Chimanyano with us. Your love, laughter, and presence made our day unforgettable.</p>
+      <div class="divider" style="margin:0 auto 28px"></div>
+      <p class="muted" style="margin-bottom:28px;font-size:15px">Relive every moment in our shared wedding album — browse and download the photos captured by you and our guests.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn btn-primary" href="album">Open Shared Wedding Album</a>
+        <a class="btn btn-ghost" href="/">Back to Home</a>
+      </div>
+      <p class="muted" style="margin-top:40px;font-size:12px;letter-spacing:.12em;text-transform:uppercase">December 6, 2026 · Blantyre, Malawi</p>
+    </div>
+  </main>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>
