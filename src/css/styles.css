@@ -259,6 +259,14 @@ footer .links a:hover{opacity:1}
   .invite-card .invite-actions .btn{padding:11px 12px;font-size:10.5px;letter-spacing:.08em;width:100%}
 }
 .invite-card .note{font-size:8px;letter-spacing:.05em;color:var(--muted);margin-top:14px;opacity:.6}
+.invite-card .guest-pass-meta{display:inline-block;margin:2px auto 6px;padding:5px 14px;border:1px solid rgba(201,169,110,.55);border-radius:999px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--burgundy);background:rgba(245,239,229,.6)}
+.invite-code-gate{max-width:440px;margin:24px auto 0;padding:22px 20px;background:rgba(255,255,255,.88);border:1px solid rgba(201,169,110,.45);border-radius:14px;box-shadow:0 14px 40px rgba(42,36,32,.1);text-align:center}
+.invite-code-title{font-family:var(--font-display);font-size:19px;letter-spacing:.16em;text-transform:uppercase;color:var(--burgundy);margin-bottom:6px}
+.invite-code-form{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.invite-code-form input{flex:1 1 210px;min-width:0;padding:12px 14px;border:1px solid var(--champagne);border-radius:10px;background:#fff;font-family:inherit;font-size:14px;color:var(--ink)}
+.invite-code-form input:focus{outline:none;border-color:var(--burgundy);box-shadow:0 0 0 3px rgba(107,39,55,.1)}
+.invite-code-form .btn-sm{flex:0 0 auto;padding:12px 20px}
+@media (max-width:480px){.invite-code-gate{padding:18px 14px}.invite-code-form .btn-sm{width:100%}}
 
 /* reveal */
 .reveal{opacity:0;transform:translateY(34px);transition:opacity .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1)}

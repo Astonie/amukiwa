@@ -24,13 +24,24 @@
   <main class="invite-page">
     <div class="container" style="max-width:640px">
       <div id="envelopeStage">
-        <p class="center muted" style="margin-bottom:20px;letter-spacing:.15em;text-transform:uppercase;font-size:12px">Tap the envelope to open</p>
+        <p class="center muted" id="envelopeHint" style="margin-bottom:20px;letter-spacing:.15em;text-transform:uppercase;font-size:12px">Tap the envelope to open</p>
         <div class="envelope-wrap" id="envWrap" role="button" tabindex="0" aria-label="Tap the envelope to open your wedding invitation">
           <div class="envelope" id="envelope">
             <div class="flap"></div>
             <div class="body"></div>
             <div class="seal">A&amp;W</div>
           </div>
+        </div>
+
+        <!-- Tamper-proof Invitation Code / Pass Gate (shown when no verified code/signature is in URL) -->
+        <div class="invite-code-gate" id="inviteCodeGate" style="display:none">
+          <div class="invite-code-title">Personal Invitation Pass</div>
+          <p class="muted" id="inviteGateMsg" style="font-size:13px;margin:4px 0 12px">Enter the personal invitation code from your WhatsApp or printed invite to unlock your personalized card.</p>
+          <form id="inviteCodeForm" class="invite-code-form">
+            <input id="inviteCodeInput" placeholder="e.g. AW-7K4M9P2X" autocomplete="off" style="text-transform:uppercase;text-align:center;letter-spacing:.14em;font-weight:600" />
+            <button type="submit" class="btn-sm">Unlock</button>
+          </form>
+          <div id="inviteCodeError" style="color:#c0392b;font-size:12px;margin-top:8px;display:none"></div>
         </div>
       </div>
 
@@ -51,17 +62,17 @@
 </svg></div>
           <div class="line"></div>
           <div class="to" id="guestLine">Dear Honored Guest,</div>
+          <div class="guest-pass-meta" id="guestPassMeta" style="display:none"></div>
           <p class="intro">Together with our families, we joyfully invite you to our Chimanyano Celebration</p>
           <div class="names" id="invNames">Astonie &amp; Wanangwa</div>
           <div class="line"></div>
           <div class="date" id="invDate">Saturday, December 6, 2026</div>
           <div class="venue" id="invVenue">Reception 11:30 AM – 3:30 PM · Mzimba Hall, Golden Peacock Hotel, Blantyre</div>
           <p class="message">Our Chimanyano Celebration. Your presence would mean the world to us.</p>
-          <p class="attendance">Dress Code: Smart Elegant — Color theme: white & dark blue</p>
-
+          <p class="attendance">Dress Code: Smart Elegant — Color theme: white &amp; dark blue</p>
 
           <div class="qr-box"><img id="qrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Fwww.google.com%2Fmaps%2Fsearch%2F%3Fapi%3D1%26query%3DGolden%2BPeacock%2BHotel%2BBlantyre%2BMalawi" crossorigin="anonymous" alt="QR code for venue map"></div>
-          <p style="font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.08em">Scan for venue &amp; map</p>
+          <p id="qrCaption" style="font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.08em">Scan for venue &amp; map</p>
           <p class="attendance">Attendance is by invitation only.</p>
         </div>
       </div>

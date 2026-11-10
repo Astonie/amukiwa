@@ -191,9 +191,15 @@ function run_migrations(): void
         if ($driver === 'sqlite') {
             db()->exec("CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, action TEXT, entity TEXT, details TEXT, created_at TEXT NOT NULL)");
             db()->exec("CREATE TABLE IF NOT EXISTS album_photos (id INTEGER PRIMARY KEY AUTOINCREMENT, guest_name TEXT NOT NULL DEFAULT 'Guest', caption TEXT DEFAULT '', category TEXT DEFAULT 'Reception', filename TEXT NOT NULL, url TEXT NOT NULL, mime TEXT NOT NULL DEFAULT 'image/jpeg', size INTEGER NOT NULL DEFAULT 0, likes INTEGER NOT NULL DEFAULT 0, approved INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL)");
+            db()->exec("CREATE TABLE IF NOT EXISTS schedule_items (id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT, title TEXT, note TEXT, sort_order INTEGER DEFAULT 0)");
+            db()->exec("CREATE TABLE IF NOT EXISTS dress_code (id TINYINT PRIMARY KEY, style TEXT, subtitle TEXT, note TEXT)");
+            db()->exec("CREATE TABLE IF NOT EXISTS invited_guests (id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT NOT NULL UNIQUE, name TEXT NOT NULL, phone TEXT DEFAULT '', max_guests INTEGER NOT NULL DEFAULT 1, table_no TEXT DEFAULT '', note TEXT DEFAULT '', opened_at TEXT DEFAULT NULL, created_at TEXT NOT NULL)");
         } else {
             db()->exec("CREATE TABLE IF NOT EXISTS audit_log (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(64), action VARCHAR(64), entity VARCHAR(64), details TEXT, created_at DATETIME NOT NULL)");
             db()->exec("CREATE TABLE IF NOT EXISTS album_photos (id INT AUTO_INCREMENT PRIMARY KEY, guest_name VARCHAR(120) NOT NULL DEFAULT 'Guest', caption TEXT, category VARCHAR(64) DEFAULT 'Reception', filename VARCHAR(255) NOT NULL, url VARCHAR(512) NOT NULL, mime VARCHAR(128) NOT NULL DEFAULT 'image/jpeg', size INT NOT NULL DEFAULT 0, likes INT NOT NULL DEFAULT 0, approved TINYINT NOT NULL DEFAULT 1, created_at DATETIME NOT NULL)");
+            db()->exec("CREATE TABLE IF NOT EXISTS schedule_items (id INT AUTO_INCREMENT PRIMARY KEY, time VARCHAR(64), title VARCHAR(255), note TEXT, sort_order INT DEFAULT 0)");
+            db()->exec("CREATE TABLE IF NOT EXISTS dress_code (id TINYINT PRIMARY KEY, style VARCHAR(120), subtitle VARCHAR(255), note TEXT)");
+            db()->exec("CREATE TABLE IF NOT EXISTS invited_guests (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(160) NOT NULL, phone VARCHAR(40) DEFAULT '', max_guests INT NOT NULL DEFAULT 1, table_no VARCHAR(40) DEFAULT '', note TEXT, opened_at DATETIME DEFAULT NULL, created_at DATETIME NOT NULL)");
         }
     } catch (Throwable $e) {}
     // Column migrations
@@ -302,6 +308,22 @@ function content_from_tables(): ?array
     // details
     $dt = $pdo->query('SELECT title, time, place, address, map_url AS mapUrl FROM details ORDER BY sort_order, id')->fetchAll(PDO::FETCH_ASSOC);
     $out['details'] = $dt ?: [];
+    // schedule (Order of the Day)
+    try {
+        $sc = $pdo->query('SELECT time, title, note FROM schedule_items ORDER BY sort_order, id')->fetchAll(PDO::FETCH_ASSOC);
+        if ($sc) $out['schedule'] = $sc;
+    } catch (Throwable $e) {}
+    // dressCode
+    try {
+        $dc = $pdo->query('SELECT style, subtitle, note FROM dress_code WHERE id = 1')->fetch(PDO::FETCH_ASSOC);
+        if ($dc) {
+            $out['dressCode'] = [
+                'style' => $dc['style'] ?? '',
+                'subtitle' => $dc['subtitle'] ?? '',
+                'note' => $dc['note'] ?? '',
+            ];
+        }
+    } catch (Throwable $e) {}
     // party
     $pa = $pdo->query('SELECT initial, name, role, note FROM party_members ORDER BY sort_order, id')->fetchAll(PDO::FETCH_ASSOC);
     $out['party'] = $pa ?: [];
@@ -373,6 +395,21 @@ function save_content_to_tables(array $data): void
         foreach (($data['details'] ?? []) as $t) {
             $st=$pdo->prepare('INSERT INTO details (title,time,place,address,map_url,sort_order) VALUES (?,?,?,?,?,?)');
             $st->execute([$t['title']??'', $t['time']??'', $t['place']??'', $t['address']??'', $t['mapUrl']??'', $i++]);
+        }
+        // schedule (Order of the Day)
+        if (isset($data['schedule']) && is_array($data['schedule'])) {
+            $pdo->exec('DELETE FROM schedule_items');
+            $i=0;
+            foreach ($data['schedule'] as $t) {
+                $st=$pdo->prepare('INSERT INTO schedule_items (time,title,note,sort_order) VALUES (?,?,?,?)');
+                $st->execute([$t['time']??'', $t['title']??'', $t['note']??'', $i++]);
+            }
+        }
+        // dressCode
+        if (isset($data['dressCode']) && is_array($data['dressCode'])) {
+            $dc = $data['dressCode'];
+            $stmt = $pdo->prepare((cfg()['driver']==='sqlite'?'INSERT OR REPLACE':'REPLACE') . ' INTO dress_code (id, style, subtitle, note) VALUES (1,?,?,?)');
+            $stmt->execute([$dc['style']??'', $dc['subtitle']??'', $dc['note']??'']);
         }
         // party
         $pdo->exec('DELETE FROM party_members');

@@ -10,6 +10,8 @@ function wedding_schema_statements(): array
     $varchar = ($driver === 'sqlite') ? 'TEXT' : 'VARCHAR(255)';
 
     $sqlite = ($driver === 'sqlite');
+    $codeType = $sqlite ? 'TEXT' : 'VARCHAR(32)';
+    $dateType = $sqlite ? 'TEXT' : 'DATETIME';
 
     if ($sqlite) {
         $users = "CREATE TABLE IF NOT EXISTS users (
@@ -208,6 +210,30 @@ function wedding_schema_statements(): array
             likes INTEGER NOT NULL DEFAULT 0,
             approved INTEGER NOT NULL DEFAULT 1,
             created_at TEXT NOT NULL
+        )",
+        "CREATE TABLE IF NOT EXISTS schedule_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            time TEXT,
+            title TEXT,
+            note TEXT,
+            sort_order INTEGER DEFAULT 0
+        )",
+        "CREATE TABLE IF NOT EXISTS dress_code (
+            id TINYINT PRIMARY KEY,
+            style TEXT,
+            subtitle TEXT,
+            note TEXT
+        )",
+        "CREATE TABLE IF NOT EXISTS invited_guests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code $codeType NOT NULL UNIQUE,
+            name $varchar NOT NULL,
+            phone $varchar DEFAULT '',
+            max_guests INTEGER NOT NULL DEFAULT 1,
+            table_no $varchar DEFAULT '',
+            note TEXT,
+            opened_at $dateType DEFAULT NULL,
+            created_at $dateType NOT NULL
         )",
     ];
 

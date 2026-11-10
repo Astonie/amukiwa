@@ -13,9 +13,10 @@ const tabs = [
   { id: 'invitation', label: 'Invitation' },
   { id: 'media', label: 'Media & Gallery' },
   { id: 'story', label: 'Story' },
-  { id: 'details', label: 'Details' },
+  { id: 'details', label: 'Details & Program' },
   { id: 'party', label: 'Party' },
   { id: 'faq', label: 'FAQ' },
+  { id: 'guests', label: 'Invited Guests' },
   { id: 'rsvps', label: 'RSVPs' },
   { id: 'guestbook', label: 'Guestbook' },
   { id: 'album', label: 'Guest Album' },
@@ -181,6 +182,7 @@ function renderAll() {
   renderDetails();
   renderParty();
   renderFaq();
+  renderGuests();
   renderRsvps();
   renderGuestbook();
   renderAlbumAdmin();
@@ -247,43 +249,10 @@ function renderCouple() {
     <div class="row"><div class="field"><label>RSVP deadline</label><input id="c_rsvpDeadline" value="${escapeAttr(c.rsvpDeadline)}"></div><div class="field"><label>Hashtag</label><input id="c_hashtag" value="${escapeAttr(c.hashtag)}"></div></div>
     <hr style="margin:20px 0;border:none;border-top:1px solid var(--champagne)">
     <h3 style="font-size:20px;color:var(--burgundy);margin-bottom:8px">Personal Invitation &amp; WhatsApp Sender</h3>
-    <p class="muted" style="font-size:12px;margin-bottom:10px">Generate a personalized interactive envelope link for a guest or family and send it directly via WhatsApp.</p>
-    <div class="row">
-      <div class="field"><label>Guest / Family Name</label><input id="invGuest" placeholder="e.g. Mr. &amp; Mrs. Phiri"></div>
-      <div class="field"><label>Guest WhatsApp Number (optional)</label><input id="invPhone" placeholder="e.g. +265991234567"></div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-sm" id="genInv" type="button">Generate Personal Link</button>
-      <button class="btn-sm" id="waInvBtn" type="button" style="background:#25D366;color:#fff">💬 Send via WhatsApp</button>
-    </div>
-    <div id="invResult" style="margin-top:10px;font-size:13px;word-break:break-all"></div>`;
+    <p class="muted" style="font-size:12px;margin-bottom:12px">Personalised invitation links now require a verified guest pass, so guests can no longer unlock a card by editing the URL. Create a guest pass in the <strong>Invited Guests</strong> tab to generate a secure link, copy it, or send it directly through WhatsApp.</p>
+    <button class="btn-sm" id="goGuests" type="button">Open Invited Guests</button>`;
 
-  const buildGuestInvite = () => {
-    const name = document.getElementById('invGuest').value.trim();
-    const phone = (document.getElementById('invPhone')?.value || '').replace(/[^\d]/g, '');
-    const url = name ? `${location.origin}/invitation?to=${encodeURIComponent(name)}` : `${location.origin}/invitation`;
-    const greeting = name ? `Dear ${name},` : 'Dear Honored Guest,';
-    const msg = `${greeting}\n\nTogether with our families, we joyfully invite you to our Chimanyano Celebration (${c.groom} & ${c.bride}) on ${c.dateDisplay} at ${c.venue}, ${c.location}.\n\nTap below to open your personal wedding invitation card & RSVP:\n${url}`;
-    return { name, phone, url, msg };
-  };
-
-  document.getElementById('genInv').addEventListener('click', () => {
-    const { name, url } = buildGuestInvite();
-    const res = document.getElementById('invResult');
-    res.innerHTML = name
-      ? `<div style="padding:10px 12px;background:var(--ivory);border:1px solid var(--champagne);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><a href="${url}" target="_blank" style="color:var(--burgundy);font-weight:600">${escapeHtml(url)}</a> <button class="btn-sm btn-outline" id="copyInv" type="button">Copy Link</button></div>`
-      : '<span class="muted">Enter a guest name above first.</span>';
-    const cb = document.getElementById('copyInv');
-    if (cb) cb.addEventListener('click', () => { navigator.clipboard.writeText(url); toast('Invitation link copied'); });
-  });
-
-  document.getElementById('waInvBtn').addEventListener('click', () => {
-    const { phone, msg } = buildGuestInvite();
-    const waUrl = phone
-      ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
-      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    window.open(waUrl, '_blank', 'noopener');
-  });
+  document.getElementById('goGuests')?.addEventListener('click', () => activate('guests'));
 }
 
 // Invitation
@@ -406,7 +375,27 @@ function renderStory() {
 // Details
 function renderDetails() {
   const el = document.getElementById('panel-details');
-  el.innerHTML = `<h2>Event Details</h2><div class="list-editor" id="detailsList"></div><button class="btn-sm" id="addDetail">+ Add event</button>`;
+  const dc = state.dressCode || {};
+  const schedule = Array.isArray(state.schedule) ? state.schedule : [];
+  el.innerHTML = `
+    <h2>Event Details</h2>
+    <div class="list-editor" id="detailsList"></div>
+    <button class="btn-sm" id="addDetail">+ Add event</button>
+
+    <hr style="margin:28px 0;border:none;border-top:1px solid var(--champagne)">
+
+    <h3 style="font-size:20px;color:var(--burgundy);margin-bottom:10px">Dress Code &amp; Color Palette</h3>
+    <div class="field"><label>Dress code style</label><input id="dc_style" value="${escapeAttr(dc.style || '')}" placeholder="Smart Elegant"></div>
+    <div class="field"><label>Color theme subtitle</label><input id="dc_subtitle" value="${escapeAttr(dc.subtitle || '')}" placeholder="Color Theme: White & Dark Blue (with Gold accents)"></div>
+    <div class="field"><label>Guest note</label><textarea id="dc_note" rows="2">${escapeHtml(dc.note || '')}</textarea></div>
+
+    <hr style="margin:28px 0;border:none;border-top:1px solid var(--champagne)">
+
+    <h3 style="font-size:20px;color:var(--burgundy);margin-bottom:4px">Order of the Day</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:14px">This is the wedding-day programme shown on the homepage under Event Details. Drag-free reordering: use the ↑ / ↓ buttons.</p>
+    <div class="list-editor" id="scheduleList"></div>
+    <button class="btn-sm" id="addSchedule">+ Add programme item</button>`;
+
   const list = el.querySelector('#detailsList');
   state.details.forEach((d, idx) => {
     const div = document.createElement('div'); div.className = 'list-item';
@@ -418,6 +407,31 @@ function renderDetails() {
   });
   el.querySelector('#addDetail').addEventListener('click', () => { state.details.push({ title: 'Event', time: '12:00 PM', place: 'Venue', address: 'City', mapUrl: '#' }); renderDetails(); });
   list.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.details.splice(+e.target.dataset.idx, 1); renderDetails(); }));
+
+  const schedList = el.querySelector('#scheduleList');
+  schedule.forEach((item, idx) => {
+    const div = document.createElement('div'); div.className = 'list-item';
+    div.innerHTML = `<button class="remove" data-idx="${idx}" title="Remove">&times;</button>
+      ${idx > 0 ? `<button class="move" data-idx="${idx}" data-dir="-1" title="Move up">↑</button>` : ''}
+      ${idx < schedule.length - 1 ? `<button class="move" data-idx="${idx}" data-dir="1" style="right:68px" title="Move down">↓</button>` : ''}
+      <div class="row"><div class="field"><label>Time</label><input class="sc-time" value="${escapeAttr(item.time || '')}" placeholder="11:00 AM"></div><div class="field"><label>Title</label><input class="sc-title" value="${escapeAttr(item.title || '')}" placeholder="Guest Arrival"></div></div>
+      <div class="field"><label>Note</label><input class="sc-note" value="${escapeAttr(item.note || '')}" placeholder="Short description shown under the title"></div>`;
+    schedList.appendChild(div);
+  });
+  el.querySelector('#addSchedule').addEventListener('click', () => {
+    state.schedule = Array.isArray(state.schedule) ? state.schedule : [];
+    state.schedule.push({ time: '12:00 PM', title: 'New programme item', note: '' });
+    renderDetails();
+  });
+  schedList.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.schedule.splice(+e.target.dataset.idx, 1); renderDetails(); }));
+  schedList.querySelectorAll('.move').forEach(b => b.addEventListener('click', e => {
+    const i = +e.target.dataset.idx;
+    const dir = +e.target.dataset.dir;
+    const ni = i + dir;
+    if (ni < 0 || ni >= state.schedule.length) return;
+    [state.schedule[i], state.schedule[ni]] = [state.schedule[ni], state.schedule[i]];
+    renderDetails();
+  }));
 }
 
 // Party
@@ -456,6 +470,158 @@ function renderFaq() {
   });
   el.querySelector('#addFaq').addEventListener('click', () => { state.faq.push({ q: 'Question?', a: 'Answer.' }); renderFaq(); });
   list.querySelectorAll('.remove').forEach(b => b.addEventListener('click', e => { state.faq.splice(+e.target.dataset.idx, 1); renderFaq(); }));
+}
+
+// Invited Guests & Personal Passes
+async function renderGuests() {
+  const el = document.getElementById('panel-guests');
+  if (!el) return;
+  if (!apiAuthed) {
+    el.innerHTML = `<h2>Invited Guests</h2>
+      <p class="muted">Personal invitation passes need the live PHP database. Open this admin panel on <strong>amukiwa.com</strong> (Hostinger) to manage guests and generate secure invitation links.</p>`;
+    return;
+  }
+
+  let guests = [];
+  try {
+    const sess = await apiSession();
+    apiCsrf = sess.csrf || apiCsrf;
+    const r = await fetch('api/guests.php', { credentials: 'same-origin', cache: 'no-store' });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j && j.ok && Array.isArray(j.guests)) guests = j.guests;
+  } catch (e) {}
+
+  const c = state.couple || {};
+  const buildMessage = (g) => {
+    const url = `${location.origin}/invitation?code=${encodeURIComponent(g.code)}`;
+    return `Dear ${g.name},\n\nTogether with our families, we joyfully invite you to our Chimanyano Celebration (${c.groom} & ${c.bride}) on ${c.dateDisplay} at ${c.venue}, ${c.location}.\n\nTap below to open your personal wedding invitation card & RSVP:\n${url}`;
+  };
+  const guestLink = (g) => `${location.origin}/invitation?code=${encodeURIComponent(g.code)}`;
+
+  el.innerHTML = `
+    <h2>Invited Guests &amp; Personal Passes</h2>
+    <p class="muted" style="font-size:13px;margin-bottom:18px">Every guest or family gets a unique, unguessable invitation code. Only a valid code can personalise and open the invitation card, so guests cannot unlock an invitation by editing the URL.</p>
+
+    <div class="list-item" style="margin-bottom:22px">
+      <div class="row">
+        <div class="field"><label>Guest or family name</label><input id="g_name" placeholder="e.g. Mr. &amp; Mrs. Phiri"></div>
+        <div class="field"><label>WhatsApp number (optional)</label><input id="g_phone" placeholder="e.g. +265991234567"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Reserved seats</label><input id="g_seats" type="number" min="1" value="1"></div>
+        <div class="field"><label>Table number (optional)</label><input id="g_table" placeholder="e.g. 4"></div>
+      </div>
+      <div class="field"><label>Private note (optional)</label><input id="g_note" placeholder="e.g. VIP family seating"></div>
+      <button class="btn-sm" id="createGuestBtn" type="button">+ Create Guest Pass</button>
+    </div>
+
+    ${guests.length ? `
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Guest</th><th>Code</th><th>Seats / Table</th><th>First opened</th><th>Actions</th></tr></thead>
+          <tbody id="guestsBody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px"><button class="btn-sm btn-outline" id="clearGuestsBtn" type="button">Delete all guest passes</button></div>
+    ` : `<p class="muted">No guest passes yet. Add your first guest above.</p>`}
+  `;
+
+  document.getElementById('createGuestBtn').addEventListener('click', async () => {
+    const name = document.getElementById('g_name').value.trim();
+    if (!name) { alert('Please enter the guest or family name.'); return; }
+    const payload = {
+      name,
+      phone: document.getElementById('g_phone').value.trim(),
+      max_guests: Math.max(1, parseInt(document.getElementById('g_seats').value, 10) || 1),
+      table_no: document.getElementById('g_table').value.trim(),
+      note: document.getElementById('g_note').value.trim(),
+    };
+    const btn = document.getElementById('createGuestBtn');
+    btn.disabled = true;
+    try {
+      const sess = await apiSession(); apiCsrf = sess.csrf || apiCsrf;
+      const r = await fetch('api/guests.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+        body: JSON.stringify(payload),
+      });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j && j.ok) {
+        toast('Guest pass created');
+        renderGuests();
+      } else {
+        alert((j && j.error) || 'Could not create guest pass.');
+        btn.disabled = false;
+      }
+    } catch (e) {
+      alert('Network error while creating guest pass.');
+      btn.disabled = false;
+    }
+  });
+
+  const tbody = document.getElementById('guestsBody');
+  if (tbody) {
+    guests.forEach(g => {
+      const tr = document.createElement('tr');
+      const opened = g.opened_at ? new Date(String(g.opened_at).replace(' ', 'T') + 'Z').toLocaleString() : '—';
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(g.name)}</strong>${g.note ? `<div class="muted" style="font-size:11px">${escapeHtml(g.note)}</div>` : ''}</td>
+        <td><code style="font-size:12px;letter-spacing:.06em">${escapeHtml(g.code)}</code></td>
+        <td>${escapeHtml(String(g.max_guests || 1))} seat${Number(g.max_guests) === 1 ? '' : 's'}${g.table_no ? ` · Table ${escapeHtml(g.table_no)}` : ''}</td>
+        <td class="muted" style="font-size:12px">${escapeHtml(opened)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-sm btn-outline" data-act="copy" data-id="${escapeAttr(g.id)}" type="button">Copy Link</button>
+          <button class="btn-sm" data-act="wa" data-id="${escapeAttr(g.id)}" type="button" style="background:#25D366">WhatsApp</button>
+          <button class="btn-sm btn-outline" data-act="del" data-id="${escapeAttr(g.id)}" type="button">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('button[data-act]').forEach(btn => btn.addEventListener('click', async () => {
+      const g = guests.find(x => String(x.id) === String(btn.dataset.id));
+      if (!g) return;
+      const act = btn.dataset.act;
+      if (act === 'copy') {
+        try { await navigator.clipboard.writeText(guestLink(g)); toast('Invitation link copied'); }
+        catch (e) { prompt('Copy this invitation link:', guestLink(g)); }
+      } else if (act === 'wa') {
+        const phone = String(g.phone || '').replace(/[^\d]/g, '');
+        const msg = buildMessage(g);
+        const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank', 'noopener');
+      } else if (act === 'del') {
+        if (!confirm(`Delete the guest pass for ${g.name}? Their invitation link will stop working.`)) return;
+        try {
+          const sess = await apiSession(); apiCsrf = sess.csrf || apiCsrf;
+          const r = await fetch('api/guests.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+            body: JSON.stringify({ action: 'delete', id: g.id }),
+          });
+          const j = await r.json().catch(() => null);
+          if (r.ok && j && j.ok) { toast('Guest pass deleted'); renderGuests(); }
+          else alert((j && j.error) || 'Could not delete guest pass.');
+        } catch (e) { alert('Network error while deleting guest pass.'); }
+      }
+    }));
+  }
+
+  document.getElementById('clearGuestsBtn')?.addEventListener('click', async () => {
+    if (!confirm('Delete ALL guest passes? Every personal invitation link will stop working.')) return;
+    try {
+      const sess = await apiSession(); apiCsrf = sess.csrf || apiCsrf;
+      await fetch('api/guests.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+        body: JSON.stringify({ action: 'clear_all' }),
+      });
+      toast('All guest passes deleted');
+      renderGuests();
+    } catch (e) { alert('Network error while deleting guest passes.'); }
+  });
 }
 
 // RSVPs
@@ -879,13 +1045,26 @@ function gather() {
     text: it.querySelector('.s-text').value,
   }));
   // details
-  const detailItems = document.querySelectorAll('#panel-details .list-item');
+  const detailItems = document.querySelectorAll('#detailsList .list-item');
   state.details = [...detailItems].map(it => ({
     title: it.querySelector('.d-title').value,
     time: it.querySelector('.d-time').value,
     place: it.querySelector('.d-place').value,
     address: it.querySelector('.d-address').value,
     mapUrl: it.querySelector('.d-map').value,
+  }));
+  // dress code
+  state.dressCode = {
+    style: document.getElementById('dc_style')?.value || '',
+    subtitle: document.getElementById('dc_subtitle')?.value || '',
+    note: document.getElementById('dc_note')?.value || '',
+  };
+  // schedule (Order of the Day)
+  const scheduleItems = document.querySelectorAll('#scheduleList .list-item');
+  state.schedule = [...scheduleItems].map(it => ({
+    time: it.querySelector('.sc-time').value,
+    title: it.querySelector('.sc-title').value,
+    note: it.querySelector('.sc-note').value,
   }));
   // party
   const partyItems = document.querySelectorAll('#panel-party .list-item');

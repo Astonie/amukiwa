@@ -53,9 +53,16 @@ loadContent().then(C => {
 function init(C) {
 const couple = C.couple;
 const params = new URLSearchParams(location.search);
-const guest = params.get('to') || params.get('guest') || '';
+const inviteCode = (params.get('code') || params.get('pass') || '').trim();
 const guestLine = document.getElementById('guestLine');
-if (guest && guestLine) guestLine.textContent = `Dear ${decodeURIComponent(guest)},`;
+const gate = document.getElementById('inviteCodeGate');
+const gateMsg = document.getElementById('inviteGateMsg');
+const gateError = document.getElementById('inviteCodeError');
+const gateForm = document.getElementById('inviteCodeForm');
+const gateInput = document.getElementById('inviteCodeInput');
+const envelopeHint = document.getElementById('envelopeHint');
+const guestPassMeta = document.getElementById('guestPassMeta');
+let verifiedGuest = null;
 
 const invNamesEl = document.getElementById('invNames');
 if (invNamesEl) invNamesEl.textContent = `${couple.groom} & ${couple.bride}`;
@@ -76,22 +83,124 @@ const envWrap = document.getElementById('envWrap');
 const cardStage = document.getElementById('cardStage');
 const envelopeStage = document.getElementById('envelopeStage');
 
+function showGate(message) {
+  if (!gate) return;
+  gate.style.display = 'block';
+  if (message && gateMsg) gateMsg.textContent = message;
+  if (envelopeHint) envelopeHint.textContent = 'Enter your personal code to unlock your invitation';
+}
+
+function setGateError(message) {
+  if (!gateError) return;
+  gateError.textContent = message || '';
+  gateError.style.display = message ? 'block' : 'none';
+}
+
+async function verifyInviteCode(code) {
+  try {
+    const r = await fetch('api/guests.php?code=' + encodeURIComponent(code), { cache: 'no-store', credentials: 'same-origin' });
+    let j = null;
+    try { j = await r.json(); } catch (e) {}
+    if (r.ok && j && j.ok && j.guest) return { guest: j.guest };
+    // A JSON error means the API is reachable but the code is not valid.
+    if (j && typeof j === 'object' && j.error) return { error: j.error };
+    // 404/500 with an HTML body usually means PHP is not deployed (static hosting).
+    return { unreachable: true };
+  } catch (e) {
+    return { unreachable: true };
+  }
+}
+
+function applyVerifiedGuest(g) {
+  verifiedGuest = g;
+  if (guestLine) guestLine.textContent = `Dear ${g.name || 'Honored Guest'},`;
+  if (guestPassMeta) {
+    const seats = Number(g.max_guests) || 1;
+    const parts = [`Reserved for ${seats} guest${seats === 1 ? '' : 's'}`];
+    if (g.table_no) parts.push(`Table ${g.table_no}`);
+    guestPassMeta.textContent = parts.join(' · ');
+    guestPassMeta.style.display = 'block';
+  }
+  if (gate) gate.style.display = 'none';
+  if (envelopeHint) envelopeHint.textContent = 'Tap the envelope to open';
+  setGateError('');
+}
+
+function renderVerificationQr() {
+  const qr = document.getElementById('qrImg');
+  const caption = document.getElementById('qrCaption');
+  if (!qr) return;
+  if (verifiedGuest?.code) {
+    const verifyUrl = `${location.origin}/invitation?code=${encodeURIComponent(verifiedGuest.code)}`;
+    QRCode.toDataURL(verifyUrl, { width: 180, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } })
+      .then(url => { qr.src = url; })
+      .catch(e => { console.error('QR gen failed', e); });
+    if (caption) caption.textContent = 'Scan at entrance to verify this invitation';
+  } else {
+    const mapUrl = 'https://www.google.com/maps/search/?api=1&query=Golden+Peacock+Hotel+Blantyre+Malawi';
+    QRCode.toDataURL(mapUrl, { width: 160, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } })
+      .then(url => { qr.src = url; })
+      .catch(e => { console.error('QR gen failed', e); });
+    if (caption) caption.textContent = 'Scan for venue & map';
+  }
+}
+
 let opened = false;
 function openEnvelope() {
-  if (opened) return; opened = true;
+  if (opened) return;
+  if (!verifiedGuest) {
+    showGate('This invitation is personal. Enter the code from your invitation link to open your card.');
+    setGateError('A valid personal invitation code is required.');
+    gateInput?.focus();
+    return;
+  }
+  opened = true;
   envelope.classList.add('open');
   setTimeout(() => {
     envelopeStage.style.display = 'none';
     cardStage.style.display = 'block';
     launchConfetti();
-    const qr = document.getElementById('qrImg');
-    if (qr) {
-      const mapUrl = 'https://www.google.com/maps/search/?api=1&query=Golden+Peacock+Hotel+Blantyre+Malawi';
-      QRCode.toDataURL(mapUrl, { width: 160, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } })
-        .then(url => { qr.src = url; })
-        .catch(e => { console.error('QR gen failed', e); });
-    }
+    renderVerificationQr();
   }, 900);
+}
+
+async function unlockWithCode(rawCode, { autoOpen = false } = {}) {
+  const code = String(rawCode || '').trim().toUpperCase();
+  if (!code) {
+    setGateError('Please enter the invitation code from your personal link.');
+    return;
+  }
+  setGateError('');
+  if (gateMsg) gateMsg.textContent = 'Verifying your personal invitation…';
+  const result = await verifyInviteCode(code);
+  if (result.guest) {
+    applyVerifiedGuest(result.guest);
+    if (autoOpen) openEnvelope();
+    return;
+  }
+  if (result.unreachable) {
+    showGate('We could not verify your invitation right now. Please reopen your personal invitation link, or try again when you are online.');
+    setGateError('Verification service unavailable.');
+  } else {
+    showGate('Enter the personal invitation code from your WhatsApp or printed invite to unlock your personalized card.');
+    setGateError(result.error || 'That invitation code was not recognised.');
+  }
+}
+
+gateForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = gateForm.querySelector('button[type="submit"]');
+  if (btn) btn.disabled = true;
+  await unlockWithCode(gateInput?.value, { autoOpen: true });
+  if (btn) btn.disabled = false;
+});
+
+// Gate the invitation: only a verified code can personalise and open the card.
+if (inviteCode) {
+  showGate('Verifying your personal invitation…');
+  unlockWithCode(inviteCode);
+} else {
+  showGate();
 }
 envWrap.addEventListener('click', openEnvelope);
 envWrap.addEventListener('keydown', (e) => {
