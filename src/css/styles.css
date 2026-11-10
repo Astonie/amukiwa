@@ -344,10 +344,12 @@ footer .links a:hover{opacity:1}
 .g:hover img { transform: scale(1.08) translateZ(20px); }
 .section-title { background: linear-gradient(135deg, var(--burgundy), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .divider-floral { color: var(--gold); font-size: 22px; letter-spacing: .4em; }
-.countdown { background: linear-gradient(180deg, var(--ivory), #f0ebe3); }
+.countdown { background: linear-gradient(180deg, var(--ivory), #f0ebe3); color: var(--ink); }
+.countdown h2 { background: linear-gradient(135deg, var(--burgundy), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 36px; }
 .cd-item { background: #fff; border-radius: 16px; padding: 20px 10px; box-shadow: 0 10px 30px rgba(42,36,32,.08); transform: translateZ(0); transition: transform .3s; }
 .cd-item:hover { transform: translateY(-4px); }
 .cd-num { background: linear-gradient(135deg, var(--burgundy), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cd-label { color: var(--muted); opacity: 1; letter-spacing: .2em; }
 .fab-rsvp { background: linear-gradient(135deg, var(--burgundy), #8a3347); backdrop-filter: blur(6px); }
 .music-btn { background: linear-gradient(135deg, var(--burgundy), #8a3347); }
 footer { background: linear-gradient(180deg, var(--burgundy-deep), var(--burgundy)); }
