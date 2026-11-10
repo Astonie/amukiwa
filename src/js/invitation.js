@@ -103,13 +103,13 @@ envWrap.addEventListener('keydown', (e) => {
 
 const inviteUrl = location.href;
 
-document.getElementById('shareBtn').addEventListener('click', async () => {
+document.getElementById('shareBtn')?.addEventListener('click', async () => {
   const data = { title: `${couple.groom} & ${couple.bride} Wedding`, text: 'You are invited!', url: inviteUrl };
   if (navigator.share) { try { await navigator.share(data); } catch(e){} }
   else { await navigator.clipboard.writeText(inviteUrl); alert('Invitation link copied!'); }
 });
 
-document.getElementById('calBtn').addEventListener('click', () => {
+document.getElementById('calBtn')?.addEventListener('click', () => {
   const dt = couple.dateISO.replace(/[-:]/g,'').slice(0,15);
   const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//AstonieWanangwa//EN\nBEGIN:VEVENT\nUID:astonie-wanangwa-wedding\nDTSTAMP:${dt}Z\nDTSTART:${dt}\nDTEND:${dt}\nSUMMARY:${couple.groom} & ${couple.bride} Wedding\nLOCATION:${couple.venue}, ${couple.location}\nDESCRIPTION:Ceremony and reception\nEND:VEVENT\nEND:VCALENDAR`;
   const blob = new Blob([ics],{type:'text/calendar'});
