@@ -59,11 +59,25 @@
 
     <section class="checkin-card" id="ciIdle" hidden>
       <p class="checkin-eyebrow">Entrance check-in</p>
-      <h1 class="checkin-title">Verify an invitation</h1>
-      <p class="checkin-text">Scan the QR code on the guest’s invitation, or enter the invitation code below.</p>
+      <h1 class="checkin-title">Scan to enter</h1>
+      <p class="checkin-text">Point this camera at the guest’s invitation QR code. A valid pass is welcomed instantly.</p>
+
+      <div class="checkin-scanner" id="ciScanner" hidden>
+        <div class="checkin-video-wrap">
+          <video id="ciVideo" playsinline muted aria-label="Camera preview"></video>
+          <div class="checkin-scan-frame" aria-hidden="true"></div>
+        </div>
+        <p class="checkin-scanner-hint" id="ciScannerHint">Hold the QR code inside the frame</p>
+      </div>
+
+      <button class="checkin-btn checkin-btn-solid" id="ciScanBtn" type="button">Open camera to scan</button>
+      <p class="checkin-camera-note" id="ciCameraNote" hidden></p>
+
+      <div class="checkin-or"><span>or enter their short code</span></div>
+
       <form class="checkin-form" id="ciCodeForm">
-        <input id="ciCodeInput" placeholder="e.g. AW-7K4M9P2X" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Invitation code" />
-        <button class="checkin-btn checkin-btn-solid" type="submit">Verify</button>
+        <input id="ciCodeInput" placeholder="e.g. AW-7K4M9" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Invitation code" />
+        <button class="checkin-btn checkin-btn-outline" type="submit">Verify code</button>
       </form>
       <p class="checkin-error" id="ciIdleError" hidden></p>
     </section>

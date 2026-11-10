@@ -13,14 +13,27 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 function generate_invite_code(): string
 {
+    // Short, easy-to-read code: 5 characters from an unambiguous alphabet.
+    // 32^5 combinations keeps passes unguessable while staying easy to type.
     $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    $part1 = '';
-    $part2 = '';
-    for ($i = 0; $i < 4; $i++) {
-        $part1 .= $chars[random_int(0, strlen($chars) - 1)];
-        $part2 .= $chars[random_int(0, strlen($chars) - 1)];
+    $code = '';
+    for ($i = 0; $i < 5; $i++) {
+        $code .= $chars[random_int(0, strlen($chars) - 1)];
     }
-    return 'AW-' . $part1 . $part2;
+    return 'AW-' . $code;
+}
+
+function unique_invite_code(): string
+{
+    for ($attempt = 0; $attempt < 20; $attempt++) {
+        $candidate = generate_invite_code();
+        $chk = db()->prepare('SELECT COUNT(*) FROM invited_guests WHERE code = ?');
+        $chk->execute([$candidate]);
+        if ((int)$chk->fetchColumn() === 0) {
+            return $candidate;
+        }
+    }
+    return 'AW-' . strtoupper(bin2hex(random_bytes(3)));
 }
 
 function normalize_invite_code(string $code): array
@@ -111,6 +124,16 @@ if ($method === 'POST') {
         json_out(['ok' => true]);
     }
 
+    if ($action === 'recode') {
+        $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
+        if ($id <= 0) {
+            json_out(['error' => 'Invalid guest id'], 400);
+        }
+        $newCode = unique_invite_code();
+        db()->prepare('UPDATE invited_guests SET code = ? WHERE id = ?')->execute([$newCode, $id]);
+        json_out(['ok' => true, 'code' => $newCode]);
+    }
+
     if ($action === 'delete') {
         $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
         if ($id <= 0) {
@@ -140,20 +163,8 @@ if ($method === 'POST') {
         json_out(['error' => 'Guest name is required'], 400);
     }
 
-    // Generate unique code
-    $code = '';
-    for ($attempt = 0; $attempt < 10; $attempt++) {
-        $candidate = generate_invite_code();
-        $chk = db()->prepare('SELECT COUNT(*) FROM invited_guests WHERE code = ?');
-        $chk->execute([$candidate]);
-        if ((int)$chk->fetchColumn() === 0) {
-            $code = $candidate;
-            break;
-        }
-    }
-    if ($code === '') {
-        $code = 'AW-' . strtoupper(bin2hex(random_bytes(4)));
-    }
+    // Generate unique short code
+    $code = unique_invite_code();
 
     $now = gmdate('Y-m-d H:i:s');
     $stmt = db()->prepare('INSERT INTO invited_guests (code, name, phone, max_guests, table_no, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');

@@ -494,7 +494,7 @@ async function renderGuests() {
   const c = state.couple || {};
   const buildMessage = (g) => {
     const url = `${location.origin}/invitation?code=${encodeURIComponent(g.code)}`;
-    return `Dear ${g.name},\n\nTogether with our families, we joyfully invite you to our Chimanyano Celebration (${c.groom} & ${c.bride}) on ${c.dateDisplay} at ${c.venue}, ${c.location}.\n\nTap below to open your personal wedding invitation card. At the entrance, simply present the QR code on your invitation for a seamless check-in:\n${url}`;
+    return `Dear ${g.name},\n\nTogether with our families, we joyfully invite you to our Chimanyano Celebration (${c.groom} & ${c.bride}) on ${c.dateDisplay} at ${c.venue}, ${c.location}.\n\nTap below to open your personal wedding invitation card. At the entrance, simply present the QR code on your invitation for a seamless check-in. Your short code is ${g.code}:\n${url}`;
   };
   const guestLink = (g) => `${location.origin}/invitation?code=${encodeURIComponent(g.code)}`;
   const totalSeats = guests.reduce((sum, g) => sum + Math.max(1, Number(g.max_guests) || 1), 0);
@@ -503,7 +503,7 @@ async function renderGuests() {
 
   el.innerHTML = `
     <h2>Invited Guests &amp; Personal Passes</h2>
-    <p class="muted" style="font-size:13px;margin-bottom:18px">Every guest or family gets a unique, unguessable invitation code. Their invitation QR opens the entrance check-in screen: a valid pass is welcomed instantly, while anything else is directed to the Chief Protocol.</p>
+    <p class="muted" style="font-size:13px;margin-bottom:18px">Every guest or family gets a short, unique pass code. Their invitation QR opens the entrance check-in screen: a valid pass is welcomed instantly, while anything else is directed to the Chief Protocol.</p>
 
     <div class="guest-stats">
       <div class="guest-stat"><strong>${guests.length}</strong><span>Guest passes</span></div>
@@ -596,6 +596,7 @@ async function renderGuests() {
           <button class="btn-sm btn-outline" data-act="copy" data-id="${escapeAttr(g.id)}" type="button">Copy Link</button>
           <button class="btn-sm" data-act="wa" data-id="${escapeAttr(g.id)}" type="button" style="background:#25D366">WhatsApp</button>
           ${checked ? `<button class="btn-sm btn-outline" data-act="uncheck" data-id="${escapeAttr(g.id)}" type="button">Undo Entry</button>` : ''}
+          ${String(g.code || '').replace(/[^A-Z0-9]/g, '').length > 7 ? `<button class="btn-sm btn-outline" data-act="recode" data-id="${escapeAttr(g.id)}" type="button">Shorten Code</button>` : ''}
           <button class="btn-sm btn-outline" data-act="del" data-id="${escapeAttr(g.id)}" type="button">Delete</button>
         </td>`;
       tbody.appendChild(tr);
@@ -636,6 +637,20 @@ async function renderGuests() {
           if (r.ok && j && j.ok) { toast('Arrival record removed'); renderGuests(); }
           else alert((j && j.error) || 'Could not remove the arrival record.');
         } catch (e) { alert('Network error while updating the arrival record.'); }
+      } else if (act === 'recode') {
+        if (!confirm(`Replace ${g.name}’s current code with a new short code? The old invitation link will stop working.`)) return;
+        try {
+          const sess = await apiSession(); apiCsrf = sess.csrf || apiCsrf;
+          const r = await fetch('api/guests.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+            body: JSON.stringify({ action: 'recode', id: g.id }),
+          });
+          const j = await r.json().catch(() => null);
+          if (r.ok && j && j.ok) { toast(`New short code: ${j.code}`); renderGuests(); }
+          else alert((j && j.error) || 'Could not generate a new code.');
+        } catch (e) { alert('Network error while generating a new code.'); }
       } else if (act === 'del') {
         if (!confirm(`Delete the guest pass for ${g.name}? Their invitation link will stop working.`)) return;
         try {
