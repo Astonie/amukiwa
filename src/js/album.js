@@ -253,7 +253,7 @@ function renderGrid() {
         </div>
         <div class="album-card-body">
           <div class="album-card-top">
-            <div class="album-card-guest">📸 ${escapeHtml(p.guest_name || 'Wedding Guest')}</div>
+            <div class="album-card-guest">${escapeHtml(p.guest_name || 'Wedding Guest')}</div>
             <div class="album-card-time">${escapeHtml(formatTimeAgo(p.created_at))}</div>
           </div>
           ${p.caption ? `<p class="album-card-caption">${escapeHtml(p.caption)}</p>` : ''}
@@ -702,7 +702,7 @@ async function init() {
     tvWallIdx = tvWallIdx % allPhotos.length;
     const p = allPhotos[tvWallIdx];
     if (imgEl) imgEl.src = p.url;
-    if (guestEl) guestEl.textContent = `📸 Captured by ${p.guest_name || 'Wedding Guest'} · ${p.category || 'Reception'}`;
+    if (guestEl) guestEl.textContent = `Captured by ${p.guest_name || 'Wedding Guest'} · ${p.category || 'Reception'}`;
     if (capEl) capEl.textContent = p.caption || '';
   };
 

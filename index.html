@@ -23,6 +23,9 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#6b2737" />
   <!-- Analytics & error monitoring: configure via .env (VITE_ERROR_ENDPOINT) and uncomment snippets in DEPLOY.md -->
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png" />
 </head>
 <body>
   <a class="skip-link" href="#home">Skip to content</a>
@@ -61,7 +64,7 @@
       <div class="mobile-menu-ctas">
         <a class="btn btn-primary" href="#rsvp">RSVP Now</a>
         <a class="btn btn-ghost" href="invitation">Open My Invitation</a>
-        <a class="btn btn-ghost" href="album">📸 Open Shared Guest Album</a>
+        <a class="btn btn-ghost" href="album">Open Shared Guest Album</a>
       </div>
     </div>
   </div>
@@ -166,11 +169,11 @@
           <p class="muted" style="margin:8px 0 18px;font-size:15px">Our Chimanyano Celebration &amp; Reception takes place at <strong>Mzimba Hall</strong> inside Golden Peacock Hotel in Blantyre, Malawi.</p>
           <div class="venue-guide-highlights">
             <div class="vg-item">
-              <strong>🅿️ Parking &amp; Arrival</strong>
+              <strong>Parking &amp; Arrival</strong>
               <span>Complimentary secure parking is available inside the hotel complex right next to Mzimba Hall.</span>
             </div>
             <div class="vg-item">
-              <strong>🏨 Accommodation</strong>
+              <strong>Accommodation</strong>
               <span>Out-of-town guests can book rooms directly at Golden Peacock Hotel Blantyre or nearby city-center lodges within 5–10 minutes' drive.</span>
             </div>
           </div>
@@ -212,7 +215,7 @@
           <h3>Help Us Capture Every Beautiful Moment</h3>
           <p class="muted" style="margin:12px 0 22px;font-size:16px">Point your phone camera at the QR code or tap below to take photos directly from your seat and browse pictures shared by everyone at the celebration.</p>
           <div class="home-album-actions">
-            <a class="btn btn-primary" href="album?snap=1">📷 Snap &amp; Upload Photos</a>
+            <a class="btn btn-primary" href="album?snap=1">Snap &amp; Upload Photos</a>
             <a class="btn btn-ghost" href="album">View Full Shared Album →</a>
           </div>
           <div class="home-album-recent" id="homeAlbumPreview" style="margin-top:24px"></div>
@@ -264,7 +267,7 @@
           <div class="field"><label>Number of guests</label><select name="guests"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
           <div class="field"><label>Dietary requirements</label><input name="diet" placeholder="Vegetarian, allergies..."></div>
         </div>
-        <div class="field"><label>🎵 Song Request (What song will get you on the dance floor?)</label><input name="song" placeholder="e.g. Artist — Song Title"></div>
+        <div class="field"><label>Song Request (What song will get you on the dance floor?)</label><input name="song" placeholder="e.g. Artist — Song Title"></div>
         <div class="field"><label>Message to the couple</label><textarea name="msg" rows="3"></textarea></div>
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0" aria-hidden="true">
         <button class="submit" type="submit">Send RSVP</button>

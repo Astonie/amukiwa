@@ -11,6 +11,9 @@
   <link rel="stylesheet" href="src/css/styles.css" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#6b2737" />
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png" />
 </head>
 <body class="album-body">
   <canvas id="confetti"></canvas>
@@ -87,8 +90,8 @@
                   <div class="dropzone-title">Tap to choose photos or take a picture</div>
                   <div class="dropzone-sub">Supports JPEG, PNG &amp; WebP · Up to 10 photos at once</div>
                   <div class="dropzone-btns">
-                    <button type="button" class="btn-sm" id="dzCameraBtn">📷 Open Camera</button>
-                    <button type="button" class="btn-sm btn-outline" id="dzGalleryBtn">🖼️ Choose Photos</button>
+                    <button type="button" class="btn-sm" id="dzCameraBtn">Open Camera</button>
+                    <button type="button" class="btn-sm btn-outline" id="dzGalleryBtn">Choose Photos</button>
                   </div>
                 </div>
                 <div class="dropzone-previews" id="dropzonePreviews" style="display:none"></div>
@@ -170,12 +173,12 @@
               <option value="oldest">Oldest First</option>
             </select>
             <button type="button" class="btn-sm btn-outline" id="slideshowBtn">▶ Slideshow</button>
-            <button type="button" class="btn-sm" id="tvWallBtn" title="Launch Fullscreen Live TV Wall for Reception Screens">📺 Live TV Wall</button>
+            <button type="button" class="btn-sm" id="tvWallBtn" title="Launch Fullscreen Live TV Wall for Reception Screens">Live TV Wall</button>
           </div>
         </div>
 
         <div id="albumEmptyState" class="album-empty" style="display:none">
-          <div class="album-empty-icon">📸</div>
+          
           <h3>No photos in this view yet</h3>
           <p class="muted">Be the first to snap a picture and share a memory with the couple!</p>
         </div>

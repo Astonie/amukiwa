@@ -131,8 +131,7 @@ C.story.forEach((s, i) => {
 const detailsGrid = document.getElementById('detailsGrid');
 C.details.forEach(d => {
   const card = document.createElement('div'); card.className='detail-card reveal';
-  card.innerHTML = `<div class="detail-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
-    <h3>${escapeHtml(d.title)}</h3>
+  card.innerHTML = `<h3>${escapeHtml(d.title)}</h3>
     <div class="time">${escapeHtml(d.time)}</div>
     <p>${escapeHtml(d.place)}<br/>${escapeHtml(d.address)}</p>
     <a class="map-link" target="_blank" href="${d.mapUrl}">View on map →</a>`;

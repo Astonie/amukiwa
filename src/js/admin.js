@@ -712,7 +712,7 @@ async function renderRsvps() {
   }
   const el = document.getElementById('panel-rsvps');
   if (!list.length) { el.innerHTML = '<h2>RSVPs</h2><p class="muted">No RSVPs yet.</p>'; return; }
-  el.innerHTML = `<h2>RSVPs</h2><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Attend</th><th>Guests</th><th>Diet</th><th>🎵 Song Request</th><th>Message</th><th>Date</th></tr></thead><tbody></tbody></table>
+  el.innerHTML = `<h2>RSVPs</h2><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Attend</th><th>Guests</th><th>Diet</th><th>Song Request</th><th>Message</th><th>Date</th></tr></thead><tbody></tbody></table>
     <div style="margin-top:12px"><button class="btn-sm btn-outline" id="clearRsvp">Clear all RSVPs</button> <button class="btn-sm btn-outline" id="exportRsvp">Export CSV</button></div>`;
   const tbody = el.querySelector('tbody');
   list.forEach(r => {
@@ -829,7 +829,7 @@ async function renderAlbumAdmin() {
         <img src="${escapeAttr(p.url)}" onerror="this.style.opacity=.3">
         <div style="padding:6px 8px;font-size:11px;line-height:1.35">
           <div style="font-weight:600;color:var(--burgundy)">${escapeHtml(p.guest_name || 'Guest')}</div>
-          <div class="muted">${escapeHtml(p.category || 'Reception')} · ♥ ${Number(p.likes) || 0}</div>
+          <div class="muted">${escapeHtml(p.category || 'Reception')} · ${Number(p.likes) || 0} likes</div>
           ${p.caption ? `<div style="margin-top:2px;color:var(--ink)">${escapeHtml(p.caption)}</div>` : ''}
         </div>
         <div class="actions">
