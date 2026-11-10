@@ -35,5 +35,6 @@ session_regenerate_id(true);
 $_SESSION['uid'] = (int)$user['id'];
 $_SESSION['username'] = $user['username'];
 $_SESSION['role'] = $user['role'] ?? 'admin';
+$_SESSION['must_change_password'] = password_verify('admin', $user['password_hash']);
 
-json_out(['ok' => true, 'username' => $user['username'], 'csrf' => csrf_token()]);
+json_out(['ok' => true, 'username' => $user['username'], 'csrf' => csrf_token(), 'must_change_password' => !empty($_SESSION['must_change_password'])]);

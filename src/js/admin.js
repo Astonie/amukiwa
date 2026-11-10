@@ -30,6 +30,7 @@ const adminApp = document.getElementById('adminApp');
 let apiAuthed = false;
 let apiUsername = null;
 let apiCsrf = null;
+let mustChangePassword = false;
 
 async function apiSession() {
   try {
@@ -78,6 +79,7 @@ async function checkAuth() {
   const sess = await apiSession();
   if (sess.authed) {
     apiAuthed = true; apiUsername = sess.username || 'admin'; apiCsrf = sess.csrf || null;
+    mustChangePassword = !!sess.must_change_password;
     sessionStorage.setItem('adminAuth', '1');
     sessionStorage.setItem('adminAuthMode', 'api');
     sessionStorage.setItem('adminPreview', '1');
@@ -85,6 +87,12 @@ async function checkAuth() {
     adminApp.style.display = 'block';
     await loadStateFromApi();
     initAdmin();
+    if (mustChangePassword) {
+      const banner = document.getElementById('passwordBanner');
+      if (banner) banner.hidden = false;
+      activate('settings');
+      toast('Please change the default admin password');
+    }
     return;
   }
   // Session-storage auto-login is ONLY allowed in static-hosting mode (API unreachable)
@@ -110,6 +118,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
   if (res && res.ok) {
     const sess = await apiSession();
     apiAuthed = true; apiUsername = sess.username || res.username || user; apiCsrf = sess.csrf || res.csrf || null;
+    mustChangePassword = !!res.must_change_password || !!sess.must_change_password;
     sessionStorage.setItem('adminAuth', '1');
     sessionStorage.setItem('adminAuthMode', 'api');
     sessionStorage.setItem('adminPreview', '1');
@@ -117,6 +126,12 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     adminApp.style.display = 'block';
     await loadStateFromApi();
     initAdmin();
+    if (mustChangePassword) {
+      const banner = document.getElementById('passwordBanner');
+      if (banner) banner.hidden = false;
+      activate('settings');
+      toast('Please change the default admin password');
+    }
   } else if (res && res.__unreachable) {
     // Static hosting (GitHub Pages) — no PHP API available. Fall back to an explicit local password.
     const stored = localStorage.getItem('adminPassword');
@@ -159,6 +174,12 @@ function initAdmin() {
   });
   activate('dashboard');
   renderAll();
+  if (mustChangePassword) {
+    const banner = document.getElementById('passwordBanner');
+    if (banner) banner.hidden = false;
+    activate('settings');
+    toast('Please change the default admin password');
+  }
 }
 
 function activate(id) {
@@ -529,6 +550,7 @@ async function renderGuests() {
       <div class="guest-toolbar">
         <input id="guestSearch" type="search" placeholder="Search guest name or code…" value="${escapeAttr(searchTerm)}" aria-label="Search invited guests">
         <a class="btn-sm btn-outline" href="/checkin" target="_blank" rel="noopener">Open Entrance Desk</a>
+        <button class="btn-sm btn-outline" id="exportGuestsBtn" type="button">Export CSV</button>
       </div>
       <div style="overflow-x:auto">
         <table>
@@ -698,6 +720,16 @@ async function renderGuests() {
       toast('All guest passes deleted');
       renderGuests();
     } catch (e) { alert('Network error while deleting guest passes.'); }
+  });
+  document.getElementById('exportGuestsBtn')?.addEventListener('click', () => {
+    const csv = ['Code,Name,Phone,Seats,Table,Note,Checked In At,Opened At'].concat(guests.map(g =>
+      `"${g.code}","${String(g.name||'').replace(/"/g,'""')}","${String(g.phone||'').replace(/"/g,'""')}",${Number(g.max_guests)||1},"${String(g.table_no||'').replace(/"/g,'""')}","${String(g.note||'').replace(/"/g,'""')}","${g.checked_in_at||''}","${g.opened_at||''}"`
+    )).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'invited-guests.csv'; a.click();
+    URL.revokeObjectURL(url);
+    toast('Guest list exported');
   });
 }
 
@@ -986,6 +1018,7 @@ function renderSettings() {
   const isApi = apiAuthed && sessionStorage.getItem('adminAuthMode') === 'api';
   document.getElementById('panel-settings').innerHTML = `
     <h2>Settings</h2>
+    ${mustChangePassword ? `<div class="password-banner">You are using the default password. Please choose a new password now.</div>` : ''}
     ${isApi ? `
     <h3 style="margin:0 0 10px;font-size:20px;color:var(--burgundy)">Change server password</h3>
     <p class="muted" style="font-size:12px;margin-bottom:10px">This updates the real password on ${escapeAttr(location.origin)}. After changing, log out all other sessions — the old password will stop working.</p>
@@ -1059,6 +1092,9 @@ function renderSettings() {
       if (r.ok && j.ok) {
         status.textContent = 'Password changed. Please log in again with the new password.';
         toast('Password changed');
+        mustChangePassword = false;
+        const banner = document.getElementById('passwordBanner');
+        if (banner) banner.hidden = true;
         document.getElementById('pw_current').value = '';
         document.getElementById('pw_new').value = '';
         document.getElementById('pw_confirm').value = '';

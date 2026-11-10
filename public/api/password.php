@@ -52,6 +52,8 @@ if ($upd->rowCount() < 1) {
     json_out(['error' => 'Password update failed'], 500);
 }
 
+$_SESSION['must_change_password'] = false;
+
 // Rotate the session id so other tabs / hijacked sessions don't stay valid.
 if (session_status() === PHP_SESSION_ACTIVE) {
     session_regenerate_id(true);

@@ -24,7 +24,7 @@
     .sidebar .nav-item:hover{opacity:1;background:rgba(255,255,255,.08)}
     .sidebar .nav-item.active{opacity:1;background:rgba(255,255,255,.15);color:var(--gold-light)}
     .main{flex:1;padding:30px;max-width:1100px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .password-banner{background:#fbeee8;border:1px solid #e8b7a8;color:#8a3a2a;padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600}
     .topbar h1{font-size:32px;color:var(--burgundy)}
     .topbar .actions{display:flex;gap:8px;flex-wrap:wrap}
     .panel{display:none;background:#fff;border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
@@ -81,6 +81,7 @@
         </div>
       </aside>
       <main class="main">
+        <div id="passwordBanner" class="password-banner" hidden>Please change the default admin password in Settings before continuing.</div>
         <div class="topbar">
           <h1 id="panelTitle">Dashboard</h1>
           <div class="actions">

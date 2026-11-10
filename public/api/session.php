@@ -15,5 +15,6 @@ if ($authed) {
     $out['username'] = $_SESSION['username'] ?? '';
     $out['role'] = $_SESSION['role'] ?? 'admin';
     $out['csrf'] = csrf_token();
+    $out['must_change_password'] = !empty($_SESSION['must_change_password']);
 }
 json_out($out);
