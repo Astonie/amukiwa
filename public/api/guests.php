@@ -143,6 +143,16 @@ if ($method === 'POST') {
     require_auth();
     check_csrf();
 
+    if ($action === 'mark_arrived') {
+        $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
+        if ($id <= 0) {
+            json_out(['error' => 'Invalid guest id'], 400);
+        }
+        $now = gmdate('Y-m-d H:i:s');
+        db()->prepare('UPDATE invited_guests SET checked_in_at = COALESCE(checked_in_at, ?) WHERE id = ?')->execute([$now, $id]);
+        json_out(['ok' => true, 'checked_in_at' => $now]);
+    }
+
     if ($action === 'uncheck') {
         $id = (int)($body['id'] ?? ($_GET['id'] ?? 0));
         if ($id <= 0) {

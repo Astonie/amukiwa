@@ -617,7 +617,7 @@ async function renderGuests() {
         <td style="white-space:nowrap">
           <button class="btn-sm btn-outline" data-act="copy" data-id="${escapeAttr(g.id)}" type="button">Copy Link</button>
           <button class="btn-sm" data-act="wa" data-id="${escapeAttr(g.id)}" type="button" style="background:#25D366">WhatsApp</button>
-          ${checked ? `<button class="btn-sm btn-outline" data-act="uncheck" data-id="${escapeAttr(g.id)}" type="button">Undo Entry</button>` : ''}
+          ${checked ? `<button class="btn-sm btn-outline" data-act="uncheck" data-id="${escapeAttr(g.id)}" type="button">Undo Entry</button>` : `<button class="btn-sm btn-outline" data-act="arrive" data-id="${escapeAttr(g.id)}" type="button">Mark Arrived</button>`}
           ${String(g.code || '').replace(/[^A-Z0-9]/g, '').length > 7 ? `<button class="btn-sm btn-outline" data-act="recode" data-id="${escapeAttr(g.id)}" type="button">Shorten Code</button>` : ''}
           <button class="btn-sm btn-outline" data-act="del" data-id="${escapeAttr(g.id)}" type="button">Delete</button>
         </td>`;
@@ -645,6 +645,20 @@ async function renderGuests() {
         const msg = buildMessage(g);
         const waUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
         window.open(waUrl, '_blank', 'noopener');
+      } else if (act === 'arrive') {
+        if (!confirm(`Mark ${g.name} as arrived now?`)) return;
+        try {
+          const sess = await apiSession(); apiCsrf = sess.csrf || apiCsrf;
+          const r = await fetch('api/guests.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': apiCsrf || '' },
+            body: JSON.stringify({ action: 'mark_arrived', id: g.id }),
+          });
+          const j = await r.json().catch(() => null);
+          if (r.ok && j && j.ok) { toast('Arrival recorded'); renderGuests(); }
+          else alert((j && j.error) || 'Could not record the arrival.');
+        } catch (e) { alert('Network error while recording the arrival.'); }
       } else if (act === 'uncheck') {
         if (!confirm(`Remove the arrival record for ${g.name}?`)) return;
         try {
