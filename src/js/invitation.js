@@ -111,6 +111,8 @@ async function verifyInviteCode(code) {
   }
 }
 
+const INVITE_CODE_KEY = 'aw_invite_code';
+
 function applyVerifiedGuest(g) {
   verifiedGuest = g;
   if (guestLine) guestLine.textContent = `Dear ${g.name || 'Honored Guest'},`;
@@ -122,8 +124,9 @@ function applyVerifiedGuest(g) {
     guestPassMeta.style.display = 'block';
   }
   if (gate) gate.style.display = 'none';
-  if (envelopeHint) envelopeHint.textContent = 'Tap the envelope to open';
+  if (envelopeHint) envelopeHint.innerHTML = 'Tap the envelope to open &middot; <a href="#" id="switchCodeLink" style="color:var(--burgundy);text-decoration:underline">Use a different code</a>';
   setGateError('');
+  try { if (g && g.code) localStorage.setItem(INVITE_CODE_KEY, g.code); } catch (e) {}
 }
 
 function renderVerificationQr() {
@@ -182,6 +185,7 @@ async function unlockWithCode(rawCode, { autoOpen = false } = {}) {
     showGate('We could not verify your invitation right now. Please reopen your personal invitation link, or try again when you are online.');
     setGateError('Verification service unavailable.');
   } else {
+    try { localStorage.removeItem(INVITE_CODE_KEY); } catch (e) {}
     showGate('Enter the personal invitation code from your WhatsApp or printed invite to unlock your personalized card.');
     setGateError(result.error || 'That invitation code was not recognised.');
   }
@@ -196,13 +200,24 @@ gateForm?.addEventListener('submit', async (e) => {
 });
 
 // Gate the invitation: only a verified code can personalise and open the card.
+const storedInviteCode = !inviteCode ? (function () { try { return localStorage.getItem(INVITE_CODE_KEY) || ''; } catch (e) { return ''; } })() : '';
 if (inviteCode) {
   showGate('Verifying your personal invitation…');
   unlockWithCode(inviteCode);
+} else if (storedInviteCode) {
+  showGate('Verifying your personal invitation…');
+  unlockWithCode(storedInviteCode);
 } else {
   showGate();
 }
 envWrap.addEventListener('click', openEnvelope);
+envelopeHint?.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'switchCodeLink') {
+    e.preventDefault();
+    try { localStorage.removeItem(INVITE_CODE_KEY); } catch (err) {}
+    location.reload();
+  }
+});
 envWrap.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
