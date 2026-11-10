@@ -21,5 +21,12 @@
     <p>This page wandered off. Let's get you back to the celebration.</p>
     <a href="/">Back to the wedding</a>
   </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

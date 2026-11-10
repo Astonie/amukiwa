@@ -82,7 +82,7 @@
         <input id="ciCodeInput" placeholder="e.g. AW-7K4M9" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Invitation code" />
         <button class="checkin-btn checkin-btn-outline" type="submit">Verify code</button>
       </form>
-      <p class="checkin-error" id="ciIdleError" hidden></p>
+      <p class="checkin-error" id="ciIdleError" hidden role="alert"></p>
     </section>
 
     <footer class="checkin-foot">
@@ -92,5 +92,12 @@
   </main>
 
   <script type="module" src="src/js/checkin.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

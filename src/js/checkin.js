@@ -22,6 +22,11 @@ function showState(id) {
     const el = $(s);
     if (el) el.hidden = s !== id;
   });
+  const active = $(id);
+  if (active && id !== 'ciIdle') {
+    active.setAttribute('tabindex', '-1');
+    try { active.focus(); } catch (e) {}
+  }
 }
 
 function formatCode(code) {
@@ -380,6 +385,12 @@ $('ciCodeForm').addEventListener('submit', (e) => {
   $('ciIdleError').hidden = true;
   history.replaceState({}, '', location.pathname + '?code=' + encodeURIComponent(code));
   verify(code);
+});
+
+window.addEventListener('online', () => {
+  if (currentCode && $('ciOffline') && !$('ciOffline').hidden) {
+    verify(currentCode);
+  }
 });
 
 document.addEventListener('visibilitychange', () => {

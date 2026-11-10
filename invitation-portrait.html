@@ -52,5 +52,12 @@
   </div>
   <script type="module" src="src/js/content.js"></script>
   <script type="module" src="src/js/invitation-print.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>
