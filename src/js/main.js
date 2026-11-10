@@ -139,6 +139,28 @@ C.details.forEach(d => {
   detailsGrid.appendChild(card);
 });
 
+// Dress Code & Order of the Day Program
+if (C.dressCode) {
+  const dcStyle = document.getElementById('dressCodeStyle');
+  const dcSub = document.getElementById('dressCodeSub');
+  const dcNote = document.getElementById('dressCodeNote');
+  if (dcStyle && C.dressCode.style) dcStyle.textContent = C.dressCode.style;
+  if (dcSub && C.dressCode.subtitle) dcSub.textContent = C.dressCode.subtitle;
+  if (dcNote && C.dressCode.note) dcNote.textContent = C.dressCode.note;
+}
+const scheduleList = document.getElementById('scheduleList');
+if (scheduleList && Array.isArray(C.schedule)) {
+  scheduleList.innerHTML = C.schedule.map(item => `
+    <div class="program-row">
+      <div class="program-time">${escapeHtml(item.time)}</div>
+      <div class="program-body">
+        <div class="program-title">${escapeHtml(item.title)}</div>
+        ${item.note ? `<div class="program-note">${escapeHtml(item.note)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
 // Gallery
 const gg = document.getElementById('galleryGrid');
 C.gallery.forEach(src => {

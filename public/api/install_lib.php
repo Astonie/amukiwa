@@ -43,6 +43,7 @@ function wedding_schema_statements(): array
             guests INTEGER DEFAULT 1,
             attending TEXT DEFAULT 'yes',
             diet TEXT DEFAULT '',
+            song TEXT DEFAULT '',
             message TEXT,
             created_at TEXT NOT NULL
         )";
@@ -85,6 +86,7 @@ function wedding_schema_statements(): array
             guests INT DEFAULT 1,
             attending VARCHAR(10) DEFAULT 'yes',
             diet TEXT,
+            song VARCHAR(255) DEFAULT '',
             message TEXT,
             created_at DATETIME NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";

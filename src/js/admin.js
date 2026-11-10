@@ -245,14 +245,44 @@ function renderCouple() {
     <div class="row"><div class="field"><label>Date (ISO)</label><input id="c_dateISO" value="${escapeAttr(c.dateISO)}" placeholder="2026-12-06T14:00:00"></div><div class="field"><label>Date display</label><input id="c_dateDisplay" value="${escapeAttr(c.dateDisplay)}"></div></div>
     <div class="row"><div class="field"><label>Location</label><input id="c_location" value="${escapeAttr(c.location)}"></div><div class="field"><label>Venue</label><input id="c_venue" value="${escapeAttr(c.venue)}"></div></div>
     <div class="row"><div class="field"><label>RSVP deadline</label><input id="c_rsvpDeadline" value="${escapeAttr(c.rsvpDeadline)}"></div><div class="field"><label>Hashtag</label><input id="c_hashtag" value="${escapeAttr(c.hashtag)}"></div></div>
-    <div class="field"><label>Generate invitation link for a guest</label><div style="display:flex;gap:8px"><input id="invGuest" placeholder="Guest name"><button class="btn-sm" id="genInv" type="button">Generate</button></div><div id="invResult" style="margin-top:8px;font-size:13px;word-break:break-all"></div></div>`;
-  document.getElementById('genInv').addEventListener('click', () => {
+    <hr style="margin:20px 0;border:none;border-top:1px solid var(--champagne)">
+    <h3 style="font-size:20px;color:var(--burgundy);margin-bottom:8px">Personal Invitation &amp; WhatsApp Sender</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">Generate a personalized interactive envelope link for a guest or family and send it directly via WhatsApp.</p>
+    <div class="row">
+      <div class="field"><label>Guest / Family Name</label><input id="invGuest" placeholder="e.g. Mr. &amp; Mrs. Phiri"></div>
+      <div class="field"><label>Guest WhatsApp Number (optional)</label><input id="invPhone" placeholder="e.g. +265991234567"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-sm" id="genInv" type="button">Generate Personal Link</button>
+      <button class="btn-sm" id="waInvBtn" type="button" style="background:#25D366;color:#fff">💬 Send via WhatsApp</button>
+    </div>
+    <div id="invResult" style="margin-top:10px;font-size:13px;word-break:break-all"></div>`;
+
+  const buildGuestInvite = () => {
     const name = document.getElementById('invGuest').value.trim();
-    const url = `${location.origin}/invitation?to=${encodeURIComponent(name)}`;
+    const phone = (document.getElementById('invPhone')?.value || '').replace(/[^\d]/g, '');
+    const url = name ? `${location.origin}/invitation?to=${encodeURIComponent(name)}` : `${location.origin}/invitation`;
+    const greeting = name ? `Dear ${name},` : 'Dear Honored Guest,';
+    const msg = `${greeting}\n\nTogether with our families, we joyfully invite you to our Chimanyano Celebration (${c.groom} & ${c.bride}) on ${c.dateDisplay} at ${c.venue}, ${c.location}.\n\nTap below to open your personal wedding invitation card & RSVP:\n${url}`;
+    return { name, phone, url, msg };
+  };
+
+  document.getElementById('genInv').addEventListener('click', () => {
+    const { name, url } = buildGuestInvite();
     const res = document.getElementById('invResult');
-    res.innerHTML = name ? `<a href="${url}" target="_blank">${url}</a> <button class="btn-sm btn-outline" id="copyInv">Copy</button>` : 'Enter a guest name';
+    res.innerHTML = name
+      ? `<div style="padding:10px 12px;background:var(--ivory);border:1px solid var(--champagne);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><a href="${url}" target="_blank" style="color:var(--burgundy);font-weight:600">${escapeHtml(url)}</a> <button class="btn-sm btn-outline" id="copyInv" type="button">Copy Link</button></div>`
+      : '<span class="muted">Enter a guest name above first.</span>';
     const cb = document.getElementById('copyInv');
-    if (cb) cb.addEventListener('click', () => { navigator.clipboard.writeText(url); toast('Copied'); });
+    if (cb) cb.addEventListener('click', () => { navigator.clipboard.writeText(url); toast('Invitation link copied'); });
+  });
+
+  document.getElementById('waInvBtn').addEventListener('click', () => {
+    const { phone, msg } = buildGuestInvite();
+    const waUrl = phone
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank', 'noopener');
   });
 }
 
@@ -439,12 +469,12 @@ async function renderRsvps() {
   }
   const el = document.getElementById('panel-rsvps');
   if (!list.length) { el.innerHTML = '<h2>RSVPs</h2><p class="muted">No RSVPs yet.</p>'; return; }
-  el.innerHTML = `<h2>RSVPs</h2><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Attend</th><th>Guests</th><th>Diet</th><th>Message</th><th>Date</th></tr></thead><tbody></tbody></table>
+  el.innerHTML = `<h2>RSVPs</h2><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Attend</th><th>Guests</th><th>Diet</th><th>🎵 Song Request</th><th>Message</th><th>Date</th></tr></thead><tbody></tbody></table>
     <div style="margin-top:12px"><button class="btn-sm btn-outline" id="clearRsvp">Clear all RSVPs</button> <button class="btn-sm btn-outline" id="exportRsvp">Export CSV</button></div>`;
   const tbody = el.querySelector('tbody');
   list.forEach(r => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${escapeHtml(r.first || r.name || '')} ${escapeHtml(r.last || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.attend || r.attending || '')}</td><td>${escapeHtml(r.guests || '')}</td><td>${escapeHtml(r.diet || '')}</td><td>${escapeHtml(r.msg || r.message || '')}</td><td>${r.ts ? new Date(r.ts).toLocaleString() : (r.created_at || '')}</td>`;
+    tr.innerHTML = `<td>${escapeHtml(r.first || r.name || '')} ${escapeHtml(r.last || '')}</td><td>${escapeHtml(r.email || '')}</td><td>${escapeHtml(r.phone || '')}</td><td>${escapeHtml(r.attend || r.attending || '')}</td><td>${escapeHtml(r.guests || '')}</td><td>${escapeHtml(r.diet || '')}</td><td>${escapeHtml(r.song || '')}</td><td>${escapeHtml(r.msg || r.message || '')}</td><td>${r.ts ? new Date(r.ts).toLocaleString() : (r.created_at || '')}</td>`;
     tbody.appendChild(tr);
   });
   el.querySelector('#clearRsvp').addEventListener('click', async () => {
@@ -461,7 +491,7 @@ async function renderRsvps() {
     renderRsvps(); toast('Cleared');
   });
   el.querySelector('#exportRsvp').addEventListener('click', () => {
-    const csv = ['Name,Email,Phone,Attend,Guests,Diet,Message,Date'].concat(list.map(r => `"${(r.first||r.name||'') + ' ' + (r.last||'')}","${r.email||''}","${r.phone||''}","${r.attend||r.attending||''}","${r.guests||''}","${r.diet||''}","${((r.msg||r.message||'')).replace(/"/g,'""')}","${r.ts?new Date(r.ts).toLocaleString():(r.created_at||'')}"`)).join('\n');
+    const csv = ['Name,Email,Phone,Attend,Guests,Diet,Song Request,Message,Date'].concat(list.map(r => `"${(r.first||r.name||'') + ' ' + (r.last||'')}","${r.email||''}","${r.phone||''}","${r.attend||r.attending||''}","${r.guests||''}","${r.diet||''}","${((r.song||'')).replace(/"/g,'""')}","${((r.msg||r.message||'')).replace(/"/g,'""')}","${r.ts?new Date(r.ts).toLocaleString():(r.created_at||'')}"`)).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'rsvps.csv'; a.click();

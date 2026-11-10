@@ -170,6 +170,7 @@
               <option value="oldest">Oldest First</option>
             </select>
             <button type="button" class="btn-sm btn-outline" id="slideshowBtn">▶ Slideshow</button>
+            <button type="button" class="btn-sm" id="tvWallBtn" title="Launch Fullscreen Live TV Wall for Reception Screens">📺 Live TV Wall</button>
           </div>
         </div>
 
@@ -220,6 +221,33 @@
         <button type="button" class="btn-sm" id="modalDownloadQrBtn">Download QR Sign</button>
         <button type="button" class="btn-sm btn-outline" id="modalShareBtn">Share Link</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Feature 6: Fullscreen Live Projector / TV Wall Mode -->
+  <div class="tv-wall-overlay" id="tvWallOverlay">
+    <button type="button" class="tv-wall-close" id="tvWallCloseBtn" aria-label="Exit Live TV Wall">&times;</button>
+    <div class="tv-wall-layout">
+      <div class="tv-wall-stage">
+        <div class="tv-wall-photo-frame">
+          <img id="tvWallImg" src="" alt="Live Wedding Moment" />
+        </div>
+        <div class="tv-wall-caption-bar">
+          <div class="tv-wall-guest" id="tvWallGuest">Shared by Wedding Guest</div>
+          <div class="tv-wall-caption" id="tvWallCaption"></div>
+        </div>
+      </div>
+      <aside class="tv-wall-sidebar">
+        <div class="qr-card-ornament">❦</div>
+        <div class="tv-wall-eyebrow">Live Wedding Album</div>
+        <div class="tv-wall-couple" id="tvWallCouple">Astonie &amp; Wanangwa</div>
+        <p class="tv-wall-prompt">Scan with your phone camera to snap &amp; see your photo live on the big screen!</p>
+        <div class="tv-wall-qr-box">
+          <img id="tvWallQrImg" src="" alt="Scan to upload photo" />
+        </div>
+        <div class="tv-wall-url" id="tvWallUrl">amukiwa.com/album</div>
+        <div class="tv-wall-counter"><span id="tvWallCount">0</span> Moments Captured</div>
+      </aside>
     </div>
   </div>
 

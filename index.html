@@ -116,11 +116,77 @@
   <section class="details" id="details">
     <div class="container">
       <h2 class="section-title" id="detailsTitle">Event Details</h2>
-      <p class="section-sub" id="detailsSub">When & where we celebrate</p>
+      <p class="section-sub" id="detailsSub">When &amp; where we celebrate</p>
       <div class="divider"></div>
       <div class="grid grid-2" id="detailsGrid"></div>
       <div style="text-align:center;margin-top:30px">
         <a class="btn btn-ghost" href="#" id="addCal">Add to Calendar</a>
+      </div>
+
+      <!-- Feature 1 & 2: Dress Code Swatch Card + Order of the Day Program -->
+      <div class="details-extras-grid">
+        <div class="dresscode-card reveal" id="dressCodeCard">
+          <div class="badge" style="margin-bottom:10px">Attire &amp; Palette</div>
+          <h3 id="dressCodeStyle">Smart Elegant</h3>
+          <p class="dresscode-sub" id="dressCodeSub">Color Theme: White &amp; Dark Blue</p>
+          <div class="swatch-row" aria-label="Wedding color palette swatches">
+            <div class="swatch-item">
+              <span class="swatch-circle" style="background:#ffffff;border:1px solid #d8cfc2"></span>
+              <span class="swatch-label">Pure White</span>
+            </div>
+            <div class="swatch-item">
+              <span class="swatch-circle" style="background:#13294b"></span>
+              <span class="swatch-label">Dark Blue</span>
+            </div>
+            <div class="swatch-item">
+              <span class="swatch-circle" style="background:#1e3a5f"></span>
+              <span class="swatch-label">Royal Navy</span>
+            </div>
+            <div class="swatch-item">
+              <span class="swatch-circle" style="background:linear-gradient(135deg,#e6c88a,#b68d40)"></span>
+              <span class="swatch-label">Champagne Gold</span>
+            </div>
+          </div>
+          <p class="muted" id="dressCodeNote" style="font-size:14px;margin-top:14px">We kindly invite our guests to dress in Smart Elegant attire inspired by our White &amp; Dark Blue palette.</p>
+        </div>
+
+        <div class="program-card reveal">
+          <div class="badge" style="margin-bottom:10px">Order of the Day</div>
+          <h3>Wedding Day Program</h3>
+          <p class="dresscode-sub">Saturday, December 6, 2026 · Mzimba Hall</p>
+          <div class="program-list" id="scheduleList"></div>
+        </div>
+      </div>
+
+      <!-- Feature 3: Venue Map & Blantyre Travel/Accommodation Guide -->
+      <div class="venue-guide-card reveal">
+        <div class="venue-guide-info">
+          <div class="badge" style="margin-bottom:10px">Venue &amp; Guest Guide</div>
+          <h3>Golden Peacock Hotel, Blantyre</h3>
+          <p class="muted" style="margin:8px 0 18px;font-size:15px">Our Chimanyano Celebration &amp; Reception takes place at <strong>Mzimba Hall</strong> inside Golden Peacock Hotel in Blantyre, Malawi.</p>
+          <div class="venue-guide-highlights">
+            <div class="vg-item">
+              <strong>🅿️ Parking &amp; Arrival</strong>
+              <span>Complimentary secure parking is available inside the hotel complex right next to Mzimba Hall.</span>
+            </div>
+            <div class="vg-item">
+              <strong>🏨 Accommodation</strong>
+              <span>Out-of-town guests can book rooms directly at Golden Peacock Hotel Blantyre or nearby city-center lodges within 5–10 minutes' drive.</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px">
+            <a class="btn btn-primary" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=Golden+Peacock+Hotel+Blantyre+Malawi">Open Directions in Google Maps</a>
+            <a class="btn btn-ghost" href="invitation">View Invitation QR</a>
+          </div>
+        </div>
+        <div class="venue-map-frame">
+          <iframe
+            title="Map of Golden Peacock Hotel, Blantyre"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=Golden+Peacock+Hotel+Blantyre+Malawi&output=embed">
+          </iframe>
+        </div>
       </div>
     </div>
   </section>
@@ -198,6 +264,7 @@
           <div class="field"><label>Number of guests</label><select name="guests"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
           <div class="field"><label>Dietary requirements</label><input name="diet" placeholder="Vegetarian, allergies..."></div>
         </div>
+        <div class="field"><label>🎵 Song Request (What song will get you on the dance floor?)</label><input name="song" placeholder="e.g. Artist — Song Title"></div>
         <div class="field"><label>Message to the couple</label><textarea name="msg" rows="3"></textarea></div>
         <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;height:0;width:0" aria-hidden="true">
         <button class="submit" type="submit">Send RSVP</button>

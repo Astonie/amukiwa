@@ -202,6 +202,7 @@ function run_migrations(): void
     add_column_if_missing('rsvps', 'first', "TEXT DEFAULT ''");
     add_column_if_missing('rsvps', 'last', "TEXT DEFAULT ''");
     add_column_if_missing('rsvps', 'diet', 'TEXT');
+    add_column_if_missing('rsvps', 'song', "TEXT DEFAULT ''");
     // content version tracking in meta
     $v = 0;
     try {

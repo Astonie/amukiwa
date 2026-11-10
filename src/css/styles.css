@@ -994,3 +994,263 @@ body { animation: pageFadeIn .5s ease; }
   .home-album-actions .btn { width: 100%; justify-content: center; padding: 14px 18px; }
   .home-album-thumbs { justify-content: center; }
 }
+
+/* Feature 1 & 2: Dress Code Swatch Card + Order of the Day Program */
+.details-extras-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 28px;
+  margin-top: 44px;
+  align-items: stretch;
+}
+.dresscode-card, .program-card {
+  background: linear-gradient(180deg, #fff, #faf7f2);
+  border: 1px solid rgba(212,165,116,.28);
+  border-radius: var(--radius);
+  padding: 36px 30px;
+  box-shadow: var(--shadow);
+}
+.dresscode-card { text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.dresscode-card h3, .program-card h3 { font-size: 30px; color: var(--burgundy); margin-bottom: 4px; }
+.program-card h3, .program-card .dresscode-sub, .program-card .badge { text-align: left; }
+.dresscode-sub {
+  font-size: 12px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 22px;
+}
+.swatch-row {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 8px 0 10px;
+}
+.swatch-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.swatch-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  box-shadow: 0 6px 16px rgba(42,36,32,.14), inset 0 0 0 2px rgba(255,255,255,.65);
+  transition: transform .25s ease;
+}
+.swatch-item:hover .swatch-circle { transform: scale(1.1); }
+.swatch-label {
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.program-list {
+  display: grid;
+  gap: 12px;
+}
+.program-row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(201,169,97,.35);
+}
+.program-row:last-child { border-bottom: none; padding-bottom: 0; }
+.program-time {
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--burgundy);
+  font-weight: 700;
+}
+.program-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.program-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Feature 3: Venue Map & Guest Travel Guide */
+.venue-guide-card {
+  margin-top: 28px;
+  background: linear-gradient(135deg, #fff 0%, #faf6ee 100%);
+  border: 1px solid rgba(212,165,116,.3);
+  border-radius: var(--radius);
+  padding: 36px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 28px;
+  align-items: center;
+}
+.venue-guide-info h3 { font-size: 30px; color: var(--burgundy); }
+.venue-guide-highlights {
+  display: grid;
+  gap: 12px;
+}
+.vg-item {
+  background: rgba(251,248,243,.85);
+  border: 1px solid var(--champagne);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vg-item strong { font-size: 13px; color: var(--burgundy); }
+.vg-item span { font-size: 13px; color: var(--muted); }
+.venue-map-frame {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--champagne);
+  height: 290px;
+  background: var(--cream);
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+.venue-map-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+@media (max-width: 900px) {
+  .details-extras-grid, .venue-guide-card { grid-template-columns: 1fr; }
+  .dresscode-card, .program-card, .venue-guide-card { padding: 26px 20px; }
+  .program-row { grid-template-columns: 82px 1fr; gap: 10px; }
+}
+
+/* Feature 6: Fullscreen Live Projector / TV Wall Mode */
+.tv-wall-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: radial-gradient(circle at 30% 20%, #2c1219 0%, #14090c 70%);
+  color: #fff;
+  display: none;
+  padding: 32px;
+}
+.tv-wall-overlay.open { display: flex; align-items: center; justify-content: center; }
+.tv-wall-close {
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  font-size: 38px;
+  color: rgba(255,255,255,.75);
+  z-index: 10;
+}
+.tv-wall-close:hover { color: #fff; }
+.tv-wall-layout {
+  width: 100%;
+  max-width: 1440px;
+  height: 88vh;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 32px;
+  align-items: center;
+}
+.tv-wall-stage {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+.tv-wall-photo-frame {
+  width: 100%;
+  height: 74vh;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid rgba(201,169,97,.45);
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 24px 70px rgba(0,0,0,.6);
+}
+.tv-wall-photo-frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.tv-wall-caption-bar {
+  text-align: center;
+}
+.tv-wall-guest {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--gold-light);
+}
+.tv-wall-caption {
+  font-size: 16px;
+  color: rgba(255,255,255,.85);
+  margin-top: 4px;
+}
+.tv-wall-sidebar {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(201,169,97,.35);
+  border-radius: 22px;
+  padding: 32px 24px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+}
+.tv-wall-eyebrow {
+  font-size: 11px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-top: 6px;
+}
+.tv-wall-couple {
+  font-family: var(--font-script);
+  font-size: 46px;
+  color: #fff;
+  margin: 6px 0 10px;
+}
+.tv-wall-prompt {
+  font-size: 13px;
+  color: rgba(255,255,255,.8);
+  margin-bottom: 18px;
+}
+.tv-wall-qr-box {
+  width: 210px;
+  height: 210px;
+  margin: 0 auto 12px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 14px;
+}
+.tv-wall-qr-box img { width: 100%; height: 100%; object-fit: contain; }
+.tv-wall-url {
+  font-size: 13px;
+  letter-spacing: .1em;
+  color: var(--gold-light);
+  font-weight: 600;
+}
+.tv-wall-counter {
+  margin-top: 16px;
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(201,169,97,.2);
+  color: var(--gold-light);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+@media (max-width: 960px) {
+  .tv-wall-layout { grid-template-columns: 1fr; overflow-y: auto; }
+  .tv-wall-photo-frame { height: 50vh; }
+}

@@ -23,6 +23,7 @@ if ($method === 'POST') {
     $attend = (string)($body['attend'] ?? $body['attending'] ?? 'yes');
     $attending = in_array($attend, ['yes', 'no', 'maybe'], true) ? $attend : 'yes';
     $diet = trim((string)($body['diet'] ?? ''));
+    $song = trim((string)($body['song'] ?? ''));
     $message = trim((string)($body['msg'] ?? $body['message'] ?? ''));
 
     if ($name === '') {
@@ -32,8 +33,8 @@ if ($method === 'POST') {
         $guests = 1;
     }
 
-    $stmt = db()->prepare('INSERT INTO rsvps (first, last, name, email, phone, guests, attending, diet, message, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $stmt->execute([$first, $last, $name, $email, $phone, $guests, $attending, $diet, $message, gmdate('Y-m-d H:i:s')]);
+    $stmt = db()->prepare('INSERT INTO rsvps (first, last, name, email, phone, guests, attending, diet, song, message, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([$first, $last, $name, $email, $phone, $guests, $attending, $diet, $song, $message, gmdate('Y-m-d H:i:s')]);
     json_out(['ok' => true, 'id' => (int)db()->lastInsertId()]);
 }
 

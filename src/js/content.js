@@ -50,9 +50,21 @@ const DEFAULT_CONTENT = {
     { year: "2026", title: "The Wedding", text: "Surrounded by the people we love most, we begin our forever." }
   ],
   details: [
-    { title: "Ceremony", time: "2:00 PM", place: "Golden Peacock Hotel", address: "Blantyre, Malawi", mapUrl: "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre" },
-    { title: "Reception", time: "5:00 PM", place: "Golden Peacock Hotel", address: "Blantyre, Malawi", mapUrl: "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre" }
+    { title: "Lunch", time: "11:30 AM", place: "Golden Peacock Hotel, Blantyre", address: "Blantyre, Malawi", mapUrl: "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre" },
+    { title: "Reception", time: "11:30 AM - 3:30 PM", place: "Mzimba Hall, Golden Peacock Hotel, Blantyre", address: "Blantyre, Malawi", mapUrl: "https://maps.google.com/?q=Golden+Peacock+Hotel+Blantyre" }
   ],
+  schedule: [
+    { time: "11:00 AM", title: "Guest Arrival & Welcome", note: "Welcome drinks & seating at Mzimba Hall, Golden Peacock Hotel" },
+    { time: "11:30 AM", title: "Chimanyano Celebration & Luncheon", note: "Grand entrance of the families & wedding luncheon begins" },
+    { time: "1:00 PM", title: "Speeches, Blessings & Toasts", note: "Heartfelt words from family and wedding party" },
+    { time: "2:00 PM", title: "Cake Cutting & Celebratory Dances", note: "Music, joy, and capturing moments in our Shared Album" },
+    { time: "3:15 PM", title: "Group Photos & Send-Off", note: "Closing blessings and farewells" }
+  ],
+  dressCode: {
+    style: "Smart Elegant",
+    subtitle: "Color Theme: White & Dark Blue (with Gold accents)",
+    note: "We kindly invite our guests to dress in Smart Elegant attire inspired by our White & Dark Blue palette."
+  },
   gallery: [
     "https://picsum.photos/seed/aw1/600/600",
     "https://picsum.photos/seed/aw2/600/600",
@@ -70,11 +82,11 @@ const DEFAULT_CONTENT = {
     { initial: "G", name: "Grace Mwale", role: "Bridesmaid", note: "Sister of the bride" }
   ],
   faq: [
-    { q: "What is the dress code?", a: "Semi-formal. We suggest earthy tones, sage, champagne and rose. Please avoid white." },
-    { q: "Is there parking?", a: "Yes, free parking is available at the venue." },
+    { q: "What is the dress code?", a: "Smart Elegant — our color theme is White & Dark Blue (with Gold accents)." },
+    { q: "Is there parking?", a: "Yes, free secure parking is available inside the Golden Peacock Hotel grounds." },
     { q: "Are children welcome?", a: "We love your little ones, but this will be an adults-only celebration." },
-    { q: "Can I take photos?", a: "Please share on socials with #AstonieAndWanangwa. Our photographer will capture the ceremony." },
-    { q: "What about gifts?", a: "Your presence is the greatest gift. If you wish, a honeymoon fund is available." }
+    { q: "How do I share photos I take at the wedding?", a: "Scan the QR code on your table or open our Shared Wedding Album (/album) to snap and upload photos directly from your phone!" },
+    { q: "What about gifts?", a: "Your presence is the greatest gift. If you wish to bless us with a gift, you are warmly welcome." }
   ]
 };
 
@@ -86,8 +98,10 @@ function mergeDefaults(saved) {
     couple: Object.assign(base.couple, saved.couple || {}),
     media: Object.assign(base.media, saved.media || {}),
     invitation: Object.assign(base.invitation, saved.invitation || {}),
+    dressCode: Object.assign(base.dressCode, saved.dressCode || {}),
     story: saved.story || base.story,
     details: saved.details || base.details,
+    schedule: saved.schedule || base.schedule,
     gallery: saved.gallery || base.gallery,
     party: saved.party || base.party,
     faq: saved.faq || base.faq,

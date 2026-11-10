@@ -435,12 +435,14 @@ function addFilesToSelection(fileList) {
 }
 
 async function generateQrCodes(albumUrl) {
-  const qrTargets = ['albumQrImg', 'modalQrImg'];
+  const qrTargets = ['albumQrImg', 'modalQrImg', 'tvWallQrImg'];
   const displayUrl = albumUrl.replace(/^https?:\/\//, '');
   const u1 = document.getElementById('qrCardUrl');
   const u2 = document.getElementById('modalQrUrl');
+  const u3 = document.getElementById('tvWallUrl');
   if (u1) u1.textContent = displayUrl;
   if (u2) u2.textContent = displayUrl;
+  if (u3) u3.textContent = displayUrl;
 
   for (const id of qrTargets) {
     const el = document.getElementById(id);
@@ -677,6 +679,63 @@ async function init() {
 
   document.getElementById('slideshowBtn')?.addEventListener('click', startSlideshow);
 
+  // Feature 6: Live TV Wall / Projector Mode
+  let tvWallTimer = null;
+  let tvWallPollTimer = null;
+  let tvWallIdx = 0;
+  const tvWallOverlay = document.getElementById('tvWallOverlay');
+  const tvWallCouple = document.getElementById('tvWallCouple');
+  if (tvWallCouple) tvWallCouple.textContent = `${couple.groom} & ${couple.bride}`;
+
+  const renderTvWallSlide = () => {
+    const countEl = document.getElementById('tvWallCount');
+    if (countEl) countEl.textContent = String(allPhotos.length);
+    const imgEl = document.getElementById('tvWallImg');
+    const guestEl = document.getElementById('tvWallGuest');
+    const capEl = document.getElementById('tvWallCaption');
+    if (!allPhotos.length) {
+      if (imgEl) imgEl.src = 'uploads/hero-1.jpg';
+      if (guestEl) guestEl.textContent = 'Waiting for the first guest photo…';
+      if (capEl) capEl.textContent = 'Scan the QR code on the right with your phone camera to snap & upload!';
+      return;
+    }
+    tvWallIdx = tvWallIdx % allPhotos.length;
+    const p = allPhotos[tvWallIdx];
+    if (imgEl) imgEl.src = p.url;
+    if (guestEl) guestEl.textContent = `📸 Captured by ${p.guest_name || 'Wedding Guest'} · ${p.category || 'Reception'}`;
+    if (capEl) capEl.textContent = p.caption || '';
+  };
+
+  const openTvWall = () => {
+    if (!tvWallOverlay) return;
+    tvWallOverlay.classList.add('open');
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    tvWallIdx = 0;
+    renderTvWallSlide();
+    clearInterval(tvWallTimer);
+    clearInterval(tvWallPollTimer);
+    tvWallTimer = setInterval(() => {
+      tvWallIdx = (tvWallIdx + 1) % Math.max(1, allPhotos.length);
+      renderTvWallSlide();
+    }, 5000);
+    // Poll for newly uploaded guest photos every 12 seconds so the big screen updates live
+    tvWallPollTimer = setInterval(() => {
+      fetchAlbumPhotos();
+    }, 12000);
+  };
+
+  const closeTvWall = () => {
+    tvWallOverlay?.classList.remove('open');
+    clearInterval(tvWallTimer);
+    clearInterval(tvWallPollTimer);
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  };
+
+  document.getElementById('tvWallBtn')?.addEventListener('click', openTvWall);
+  document.getElementById('tvWallCloseBtn')?.addEventListener('click', closeTvWall);
+
   // Lightbox controls
   document.getElementById('albLbClose')?.addEventListener('click', closeLightbox);
   document.getElementById('albLbPrev')?.addEventListener('click', () => stepLightbox(-1));
@@ -697,6 +756,9 @@ async function init() {
     const qm = document.getElementById('qrModal');
     if (qm && qm.classList.contains('open') && e.key === 'Escape') {
       qm.classList.remove('open');
+    }
+    if (tvWallOverlay && tvWallOverlay.classList.contains('open') && e.key === 'Escape') {
+      closeTvWall();
     }
   });
 
