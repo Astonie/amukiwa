@@ -500,6 +500,58 @@ function launchConfetti() {
 
 async function init() {
   const C = await loadContent();
+  const albumSettings = C.album || { visible: false, requireInvite: true };
+
+  if (!albumSettings.visible) {
+    const main = document.querySelector('.album-main');
+    if (main) {
+      main.innerHTML = '<div class="container" style="text-align:center;padding:80px 24px"><div class="badge" style="margin-bottom:14px">Shared Album</div><h2 style="font-family:var(--font-display);color:var(--burgundy);margin-bottom:10px">Album Not Available Yet</h2><p class="muted" style="max-width:460px;margin:0 auto 24px;font-size:15px">The shared wedding album is only open during the celebration. Please check back on the wedding day.</p><a class="btn btn-primary" href="/">Back to Home</a></div>';
+    }
+    return;
+  }
+
+  if (albumSettings.requireInvite) {
+    const code = new URLSearchParams(location.search).get('code') || (function () { try { return localStorage.getItem('aw_invite_code') || ''; } catch (e) { return ''; } })();
+    let verified = false;
+    if (code) {
+      try {
+        const r = await fetch('api/guests.php?code=' + encodeURIComponent(code), { cache: 'no-store', credentials: 'same-origin' });
+        const j = await r.json().catch(() => null);
+        if (r.ok && j && j.ok && j.guest) {
+          verified = true;
+          try { localStorage.setItem('aw_invite_code', code.toUpperCase()); } catch (e) {}
+        }
+      } catch (e) { verified = false; }
+    }
+    if (!verified) {
+      const main = document.querySelector('.album-main');
+      if (main) {
+        main.innerHTML = '<div class="container" style="text-align:center;padding:60px 24px;max-width:520px"><div class="badge" style="margin-bottom:14px">Invited Guests Only</div><h2 style="font-family:var(--font-display);color:var(--burgundy);margin-bottom:10px">Enter Your Invitation Code</h2><p class="muted" style="margin-bottom:20px;font-size:14px">This album is for invited guests. Enter the short code from your invitation to continue.</p><form id="albumCodeForm" style="display:flex;flex-direction:column;gap:10px;align-items:center"><input id="albumCodeInput" placeholder="e.g. AW-7K4M9" autocomplete="off" style="text-transform:uppercase;text-align:center;letter-spacing:.14em;font-weight:600;padding:12px 16px;border:1px solid var(--champagne);border-radius:10px;background:var(--ivory);max-width:260px;width:100%" /><button type="submit" class="btn btn-primary">Unlock Album</button></form><p id="albumCodeError" style="color:#c0392b;font-size:12px;margin-top:10px;display:none"></p></div>';
+        const form = document.getElementById('albumCodeForm');
+        form?.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const input = document.getElementById('albumCodeInput');
+          const err = document.getElementById('albumCodeError');
+          const val = (input?.value || '').trim().toUpperCase();
+          if (!val) { if (err) { err.textContent = 'Please enter your invitation code.'; err.style.display = 'block'; } return; }
+          try {
+            const r = await fetch('api/guests.php?code=' + encodeURIComponent(val), { cache: 'no-store', credentials: 'same-origin' });
+            const j = await r.json().catch(() => null);
+            if (r.ok && j && j.ok && j.guest) {
+              try { localStorage.setItem('aw_invite_code', val); } catch (e) {}
+              location.href = location.pathname + '?code=' + encodeURIComponent(val);
+              return;
+            }
+            if (err) { err.textContent = (j && j.error) || 'That invitation code was not recognised.'; err.style.display = 'block'; }
+          } catch (e) {
+            if (err) { err.textContent = 'Verification service unavailable.'; err.style.display = 'block'; }
+          }
+        });
+      }
+      return;
+    }
+  }
+
   const couple = C.couple || { groom: 'Astonie', bride: 'Wanangwa', dateDisplay: 'December 6, 2026', location: 'Blantyre, Malawi', hashtag: '#AstonieAndWanangwa' };
 
   document.getElementById('navLogo').textContent = `${couple.groom[0]} & ${couple.bride[0]}`;

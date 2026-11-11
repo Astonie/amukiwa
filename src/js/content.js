@@ -65,6 +65,10 @@ const DEFAULT_CONTENT = {
     subtitle: "Color Theme: White & Dark Blue (with Gold accents)",
     note: "We kindly invite our guests to dress in Smart Elegant attire inspired by our White & Dark Blue palette."
   },
+  album: {
+    visible: false,
+    requireInvite: true
+  },
   gallery: [
     "https://picsum.photos/seed/aw1/600/600",
     "https://picsum.photos/seed/aw2/600/600",
@@ -99,6 +103,7 @@ function mergeDefaults(saved) {
     media: Object.assign(base.media, saved.media || {}),
     invitation: Object.assign(base.invitation, saved.invitation || {}),
     dressCode: Object.assign(base.dressCode, saved.dressCode || {}),
+    album: Object.assign(base.album, saved.album || {}),
     story: saved.story || base.story,
     details: saved.details || base.details,
     schedule: saved.schedule || base.schedule,

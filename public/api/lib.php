@@ -335,6 +335,15 @@ function content_from_tables(): ?array
     // gallery
     $gl = $pdo->query('SELECT url FROM gallery_images ORDER BY sort_order, id')->fetchAll(PDO::FETCH_ASSOC);
     $out['gallery'] = array_column($gl ?: [], 'url');
+    // album settings (stored in meta)
+    try {
+        $v = db()->query("SELECT value FROM meta WHERE `key` = 'album_visible'")->fetchColumn();
+        $r = db()->query("SELECT value FROM meta WHERE `key` = 'album_require_invite'")->fetchColumn();
+        $out['album'] = [
+            'visible' => ($v === '1' || $v === 1 || $v === true),
+            'requireInvite' => ($r === null || $r === false || $r === '') ? true : ($r === '1' || $r === 1 || $r === true),
+        ];
+    } catch (Throwable $e) {}
     return $out;
 }
 
@@ -433,6 +442,20 @@ function save_content_to_tables(array $data): void
         foreach (($data['gallery'] ?? []) as $url) {
             $st=$pdo->prepare('INSERT INTO gallery_images (url,sort_order) VALUES (?,?)');
             $st->execute([$url, $i++]);
+        }
+
+        // album settings (meta)
+        if (isset($data['album']) && is_array($data['album'])) {
+            $a = $data['album'];
+            $pairs = [
+                'album_visible' => !empty($a['visible']) ? '1' : '0',
+                'album_require_invite' => !empty($a['requireInvite']) ? '1' : '0',
+            ];
+            foreach ($pairs as $k => $v) {
+                $sql = (cfg()['driver']==='sqlite'?'INSERT OR REPLACE':'REPLACE') . " INTO meta (`key`, value) VALUES (?, ?)";
+                $st = $pdo->prepare($sql);
+                $st->execute([$k, $v]);
+            }
         }
 
         $pdo->commit();

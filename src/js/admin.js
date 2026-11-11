@@ -918,8 +918,16 @@ async function renderAlbumAdmin() {
     try { photos = JSON.parse(localStorage.getItem('weddingSharedAlbum') || '[]'); } catch (e) {}
   }
   const albumUrl = `${location.origin}/album`;
+  const albumSettings = state.album || { visible: false, requireInvite: true };
   el.innerHTML = `
     <h2>Shared Wedding Album</h2>
+    <div class="list-item" style="margin-bottom:18px">
+      <div class="row">
+        <div class="field"><label><input type="checkbox" id="albumVisible" ${albumSettings.visible ? 'checked' : ''}> Show shared album on the public site</label></div>
+        <div class="field"><label><input type="checkbox" id="albumRequireInvite" ${albumSettings.requireInvite ? 'checked' : ''}> Require an invitation code to view/upload</label></div>
+      </div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Toggle visibility to reveal the album only on the wedding day. Changes are saved with “Save Changes”.</p>
+    </div>
     <p class="muted" style="margin-bottom:14px">Guests scan the QR code or visit <a href="${escapeAttr(albumUrl)}" target="_blank" style="color:var(--burgundy);text-decoration:underline">${escapeHtml(albumUrl)}</a> to snap &amp; upload photos. You can moderate, download, or promote guest photos to the main couple gallery below.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
       <a class="btn-sm" href="album" target="_blank">Open Shared Album &amp; Table QR</a>
@@ -927,6 +935,17 @@ async function renderAlbumAdmin() {
     </div>
     ${!photos.length ? `<p class="muted">No guest photos uploaded yet.</p>` : `<div class="media-grid" id="adminAlbumGrid"></div>`}
   `;
+  document.getElementById('albumVisible')?.addEventListener('change', (e) => {
+    state.album = state.album || { visible: false, requireInvite: true };
+    state.album.visible = !!e.target.checked;
+    toast('Album visibility updated (save changes to publish)');
+  });
+  document.getElementById('albumRequireInvite')?.addEventListener('change', (e) => {
+    state.album = state.album || { visible: false, requireInvite: true };
+    state.album.requireInvite = !!e.target.checked;
+    toast('Album access rule updated (save changes to publish)');
+  });
+
   const grid = el.querySelector('#adminAlbumGrid');
   if (grid) {
     photos.forEach((p, idx) => {

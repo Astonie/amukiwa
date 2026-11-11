@@ -72,6 +72,13 @@ document.getElementById('footerNames').textContent = `${couple.groom} & ${couple
 document.getElementById('footerDate').textContent = `${couple.dateDisplay} · ${couple.location}`;
 document.title = `${couple.groom} & ${couple.bride} — Wedding`;
 
+const albumVisible = !!(C.album && C.album.visible);
+const sharedSection = document.getElementById('shared-album');
+if (sharedSection) sharedSection.style.display = albumVisible ? '' : 'none';
+document.querySelectorAll('a[href="album"], a[href="/album"], a[href="album?snap=1"]').forEach((a) => {
+  a.style.display = albumVisible ? '' : 'none';
+});
+
 const site = C.site || {};
 if (site.eyebrow) document.getElementById('heroEyebrow').textContent = site.eyebrow;
 if (site.storyTitle) document.getElementById('storyTitle').textContent = site.storyTitle;
