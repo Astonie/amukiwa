@@ -342,6 +342,7 @@ function content_from_tables(): ?array
         $out['album'] = [
             'visible' => ($v === '1' || $v === 1 || $v === true),
             'requireInvite' => ($r === null || $r === false || $r === '') ? true : ($r === '1' || $r === 1 || $r === true),
+            'universalCode' => (string)(db()->query("SELECT value FROM meta WHERE `key` = 'album_universal_code'")->fetchColumn() ?: ''),
         ];
     } catch (Throwable $e) {}
     return $out;
@@ -450,6 +451,7 @@ function save_content_to_tables(array $data): void
             $pairs = [
                 'album_visible' => !empty($a['visible']) ? '1' : '0',
                 'album_require_invite' => !empty($a['requireInvite']) ? '1' : '0',
+                'album_universal_code' => (string)($a['universalCode'] ?? ''),
             ];
             foreach ($pairs as $k => $v) {
                 $sql = (cfg()['driver']==='sqlite'?'INSERT OR REPLACE':'REPLACE') . " INTO meta (`key`, value) VALUES (?, ?)";

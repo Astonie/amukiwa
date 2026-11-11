@@ -777,6 +777,7 @@ async function renderGuests() {
     if (!tables.length) { alert('No table numbers have been assigned yet.'); return; }
     let QRCode;
     try { QRCode = (await import('qrcode')).default; } catch (e) { alert('Could not load the QR generator.'); return; }
+    const universalCode = (state.album && state.album.universalCode) ? String(state.album.universalCode).trim().toUpperCase() : '';
     const cards = await Promise.all(tables.map(async (table) => {
       const url = `${location.origin}/album`;
       const qr = await QRCode.toDataURL(url, { width: 180, margin: 1, color: { dark: '#6b2737', light: '#ffffff' } });
@@ -784,7 +785,7 @@ async function renderGuests() {
         <div class="table-card-eyebrow">Table</div>
         <div class="table-card-number">${escapeHtml(table)}</div>
         <img src="${qr}" alt="QR code for the shared album" />
-        <div class="table-card-caption">Scan to open the shared wedding album</div>
+        <div class="table-card-caption">Scan to open the shared wedding album${universalCode ? `<br><span style="font-size:9px;letter-spacing:.1em">Album access code: ${escapeHtml(universalCode)}</span>` : ''}</div>
       </div>`;
     }));
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Table Cards</title>
@@ -926,7 +927,8 @@ async function renderAlbumAdmin() {
         <div class="field"><label><input type="checkbox" id="albumVisible" ${albumSettings.visible ? 'checked' : ''}> Show shared album on the public site</label></div>
         <div class="field"><label><input type="checkbox" id="albumRequireInvite" ${albumSettings.requireInvite ? 'checked' : ''}> Require an invitation code to view/upload</label></div>
       </div>
-      <p class="muted" style="font-size:12px;margin:8px 0 0">Toggle visibility to reveal the album only on the wedding day. Changes are saved with “Save Changes”.</p>
+      <div class="field"><label>Universal album code (optional)</label><input id="albumUniversalCode" placeholder="e.g. WEDDING2026" value="${escapeAttr(albumSettings.universalCode || '')}" style="text-transform:uppercase" /></div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Toggle visibility to reveal the album only on the wedding day. A universal code lets guests who forgot their invitation code still access the album. Changes are saved with “Save Changes”.</p>
     </div>
     <p class="muted" style="margin-bottom:14px">Guests scan the QR code or visit <a href="${escapeAttr(albumUrl)}" target="_blank" style="color:var(--burgundy);text-decoration:underline">${escapeHtml(albumUrl)}</a> to snap &amp; upload photos. You can moderate, download, or promote guest photos to the main couple gallery below.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
@@ -941,9 +943,13 @@ async function renderAlbumAdmin() {
     toast('Album visibility updated (save changes to publish)');
   });
   document.getElementById('albumRequireInvite')?.addEventListener('change', (e) => {
-    state.album = state.album || { visible: false, requireInvite: true };
+    state.album = state.album || { visible: false, requireInvite: true, universalCode: '' };
     state.album.requireInvite = !!e.target.checked;
     toast('Album access rule updated (save changes to publish)');
+  });
+  document.getElementById('albumUniversalCode')?.addEventListener('input', (e) => {
+    state.album = state.album || { visible: false, requireInvite: true, universalCode: '' };
+    state.album.universalCode = (e.target.value || '').trim().toUpperCase();
   });
 
   const grid = el.querySelector('#adminAlbumGrid');

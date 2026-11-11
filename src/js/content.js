@@ -67,7 +67,8 @@ const DEFAULT_CONTENT = {
   },
   album: {
     visible: false,
-    requireInvite: true
+    requireInvite: true,
+    universalCode: ''
   },
   gallery: [
     "https://picsum.photos/seed/aw1/600/600",
